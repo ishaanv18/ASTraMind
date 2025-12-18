@@ -1,7 +1,7 @@
 package com.astramind.controller;
 
 import com.astramind.service.EmbeddingService;
-import com.astramind.service.GeminiService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,9 +17,6 @@ public class EmbeddingController {
     @Autowired
     private EmbeddingService embeddingService;
 
-    @Autowired
-    private GeminiService geminiService;
-
     /**
      * Delete all embeddings for a codebase
      */
@@ -33,24 +30,6 @@ public class EmbeddingController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.status(500).body(response);
-        }
-    }
-
-    /**
-     * Test Gemini API connectivity
-     */
-    @GetMapping("/test")
-    public ResponseEntity<Map<String, Object>> testGeminiConnection() {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            boolean connected = geminiService.testConnection();
-            response.put("connected", connected);
-            response.put("message", connected ? "Gemini API is working!" : "Failed to connect to Gemini API");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("connected", false);
             response.put("error", e.getMessage());
             return ResponseEntity.status(500).body(response);
         }
@@ -136,28 +115,4 @@ public class EmbeddingController {
         }
     }
 
-    /**
-     * Test embedding generation with a sample text
-     */
-    @PostMapping("/test-embedding")
-    public ResponseEntity<Map<String, Object>> testEmbedding(@RequestBody Map<String, String> request) {
-        Map<String, Object> response = new HashMap<>();
-        try {
-            String text = request.get("text");
-            if (text == null || text.isEmpty()) {
-                response.put("error", "Text is required");
-                return ResponseEntity.badRequest().body(response);
-            }
-
-            float[] embedding = geminiService.generateEmbedding(text);
-            response.put("success", true);
-            response.put("dimensions", embedding.length);
-            response.put("sample", new float[] { embedding[0], embedding[1], embedding[2] });
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.status(500).body(response);
-        }
-    }
 }

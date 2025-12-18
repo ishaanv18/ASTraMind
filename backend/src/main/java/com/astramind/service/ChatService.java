@@ -1,5 +1,6 @@
 package com.astramind.service;
 
+import com.astramind.service.ai.AIServiceFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -9,7 +10,7 @@ import java.util.*;
 public class ChatService {
 
     @Autowired
-    private GeminiService geminiService;
+    private AIServiceFactory aiServiceFactory;
 
     @Autowired
     private SemanticSearchService semanticSearchService;
@@ -57,8 +58,8 @@ public class ChatService {
                     "Be concise, accurate, and cite specific classes or methods when relevant. " +
                     "If the context doesn't contain enough information, say so honestly.";
 
-            // Generate response using Gemini
-            String answer = geminiService.generateResponseWithInstructions(
+            // Generate response using configured AI provider
+            String answer = aiServiceFactory.getProvider().generateResponse(
                     systemInstruction,
                     "Context:\n" + context.toString() + "\n\nQuestion: " + question);
 
