@@ -20,6 +20,9 @@ public class AuthController {
 
     private final GitHubOAuthService githubOAuthService;
 
+    @org.springframework.beans.factory.annotation.Value("${cors.allowed-origins:http://localhost:5173}")
+    private String frontendUrl;
+
     /**
      * Redirect to GitHub OAuth
      */
@@ -57,12 +60,12 @@ public class AuthController {
 
             // Redirect to frontend dashboard
             return ResponseEntity.status(302)
-                    .header("Location", "http://localhost:5173/dashboard")
+                    .header("Location", frontendUrl + "/dashboard")
                     .build();
         } catch (Exception e) {
             log.error("Error during GitHub callback", e);
             return ResponseEntity.status(302)
-                    .header("Location", "http://localhost:5173/login?error=auth_failed")
+                    .header("Location", frontendUrl + "/login?error=auth_failed")
                     .build();
         }
     }
