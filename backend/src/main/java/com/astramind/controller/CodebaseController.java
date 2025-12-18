@@ -16,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/codebases")
-@CrossOrigin(origins = { "http://localhost:3000", "http://localhost:5173" }, allowCredentials = "true")
 @Slf4j
 public class CodebaseController {
 

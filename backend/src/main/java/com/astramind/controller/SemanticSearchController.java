@@ -12,7 +12,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/search")
-@CrossOrigin(origins = { "http://localhost:3000", "http://localhost:5173" })
 public class SemanticSearchController {
 
     @Autowired
