@@ -555,6 +555,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **⭐ Star this repository if you find it helpful!**
 
-Made with ❤️ by developers, for developers
+Made with ❤️ by developer, for developers
 
 </div>
