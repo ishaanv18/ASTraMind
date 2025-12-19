@@ -1,7 +1,15 @@
 import axios from 'axios';
 import { getToken, clearToken } from '../utils/auth';
 
-const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+// CRITICAL: No fallback to localhost - must be set via environment variable
+// This ensures production builds fail if VITE_API_BASE_URL is not configured
+const baseUrl = import.meta.env.VITE_API_BASE_URL;
+
+if (!baseUrl) {
+    console.error('VITE_API_BASE_URL is not set! Check your environment variables.');
+    throw new Error('API base URL is not configured. Please set VITE_API_BASE_URL environment variable.');
+}
+
 // Ensure base URL ends with /api (add it only if not already present)
 const API_BASE_URL = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
 
