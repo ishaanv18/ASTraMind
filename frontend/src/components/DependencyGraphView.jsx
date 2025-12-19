@@ -14,6 +14,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../hooks/useNotification';
 import NotificationContainer from './NotificationContainer';
 import API_BASE_URL from '../config/apiConfig';
+import GradientButton from './GradientButton';
 
 function DependencyGraphView() {
     const { id } = useParams();
@@ -222,7 +223,9 @@ function DependencyGraphView() {
                 </div>
                 <div className="header-right">
                     <span className="username">{user?.username}</span>
-                    <button onClick={logout} className="logout-btn">Logout</button>
+                    <GradientButton onClick={logout} className="logout-btn-gradient">
+                        Logout
+                    </GradientButton>
                 </div>
             </header>
 
