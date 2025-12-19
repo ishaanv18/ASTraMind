@@ -158,7 +158,9 @@ function HomePage() {
                 {/* Tech Stack Section */}
                 <section className="tech-stack-section">
                     <div className="tech-stack-container">
-                        <h2 className="section-title">Built with Modern Technologies</h2>
+                        <h2 className="section-title">
+                            Built with <span className="gradient-text">Modern Technologies</span>
+                        </h2>
                         <p className="section-subtitle">
                             Powered by cutting-edge tools and frameworks
                         </p>
