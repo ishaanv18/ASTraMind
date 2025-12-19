@@ -5,18 +5,29 @@ import { useNavigate } from 'react-router-dom';
 import { githubService } from '../services/api';
 import { codebaseService } from '../services/codebaseService';
 import { showNotification } from '../hooks/useNotification';
+import { handleAuthCallback } from '../utils/auth';
 import GradientButton from '../components/GradientButton';
 import logo from '../assets/logo.png';
 import './DashboardPage.css';
 
 const DashboardPage = () => {
-    const { user, logout, authenticated } = useAuth();
+    const { user, logout, authenticated, checkAuth } = useAuth();
     const navigate = useNavigate();
     const [repositories, setRepositories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [analyzingRepos, setAnalyzingRepos] = useState(new Set());
     const [hasShownWelcome, setHasShownWelcome] = useState(false);
+
+    // Handle OAuth callback with JWT token
+    useEffect(() => {
+        const tokenReceived = handleAuthCallback();
+        if (tokenReceived) {
+            // Token was extracted and stored, refresh auth state
+            checkAuth();
+            showNotification('Login successful! Welcome back! 🎉', 'success');
+        }
+    }, [checkAuth]);
 
     useEffect(() => {
         if (!authenticated) {

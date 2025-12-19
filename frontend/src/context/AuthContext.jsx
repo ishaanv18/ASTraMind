@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { authService } from '../services/api';
 import { showNotification } from '../hooks/useNotification';
+import { getToken, getUserFromToken, isTokenExpired, clearToken } from '../utils/auth';
 
 const AuthContext = createContext(null);
 
@@ -23,17 +24,36 @@ export const AuthProvider = ({ children }) => {
 
     const checkAuth = async () => {
         try {
+            // Check if we have a valid JWT token
+            const token = getToken();
+
+            if (token && !isTokenExpired()) {
+                // Get user info from token
+                const userInfo = getUserFromToken();
+                if (userInfo) {
+                    setUser(userInfo);
+                    setAuthenticated(true);
+                    setLoading(false);
+                    return;
+                }
+            }
+
+            // If no valid token, check with server (fallback to session)
             const status = await authService.checkAuthStatus();
             setAuthenticated(status.authenticated);
 
             if (status.authenticated) {
                 const userData = await authService.getCurrentUser();
                 setUser(userData);
+            } else {
+                // Clear invalid token
+                clearToken();
             }
         } catch (error) {
             console.error('Auth check failed:', error);
             setAuthenticated(false);
             setUser(null);
+            clearToken();
         } finally {
             setLoading(false);
         }
@@ -45,6 +65,7 @@ export const AuthProvider = ({ children }) => {
             window.location.href = authUrl;
         } catch (error) {
             console.error('Login failed:', error);
+            showNotification('Failed to initiate login', 'error');
         }
     };
 
@@ -63,6 +84,7 @@ export const AuthProvider = ({ children }) => {
             // Even if logout fails on server, clear local state and redirect
             setUser(null);
             setAuthenticated(false);
+            clearToken();
             showNotification('Logged out successfully', 'success');
             setTimeout(() => {
                 window.location.href = '/login';
