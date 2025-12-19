@@ -39,7 +39,7 @@ function CodebaseDetailPage() {
                 try {
                     // Check if embeddings exist by doing a quick search
                     const response = await fetch(
-                        `${API_BASE_URL}/search/semantic?codebaseId=${id}&query=test&type=ALL&limit=1`,
+                        `${API_BASE_URL}/api/search/semantic?codebaseId=${id}&query=test&type=ALL&limit=1`,
                         { method: 'POST' }
                     );
                     const data = await response.json();
@@ -169,7 +169,7 @@ function CodebaseDetailPage() {
     const triggerEmbeddingGeneration = async () => {
         try {
             setGeneratingEmbeddings(true);
-            const response = await fetch(`${API_BASE_URL}/embeddings/codebases/${id}/generate`, {
+            const response = await fetch(`${API_BASE_URL}/api/embeddings/codebases/${id}/generate`, {
                 method: 'POST'
             });
             const data = await response.json();
@@ -193,7 +193,7 @@ function CodebaseDetailPage() {
         try {
             setSearching(true);
             const response = await fetch(
-                `${API_BASE_URL}/search/semantic?codebaseId=${id}&query=${encodeURIComponent(query)}&type=ALL&limit=20`,
+                `${API_BASE_URL}/api/search/semantic?codebaseId=${id}&query=${encodeURIComponent(query)}&type=ALL&limit=20`,
                 { method: 'POST' }
             );
             const data = await response.json();
