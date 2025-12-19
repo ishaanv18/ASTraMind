@@ -27,7 +27,7 @@ function MetricsPage() {
     const loadMetrics = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`${API_BASE_URL}/api/metrics/codebases/${id}`);
+            const response = await fetch(`${API_BASE_URL}/metrics/codebases/${id}`);
             const data = await response.json();
 
             if (data.error) {
@@ -60,8 +60,8 @@ function MetricsPage() {
     const loadTopItems = async () => {
         try {
             const [complexRes, coupledRes] = await Promise.all([
-                fetch(`${API_BASE_URL}/api/metrics/codebases/${id}/methods/top-complex?limit=10`),
-                fetch(`${API_BASE_URL}/api/metrics/codebases/${id}/classes/top-coupled?limit=10`)
+                fetch(`${API_BASE_URL}/metrics/codebases/${id}/methods/top-complex?limit=10`),
+                fetch(`${API_BASE_URL}/metrics/codebases/${id}/classes/top-coupled?limit=10`)
             ]);
 
             const complexData = await complexRes.json();
@@ -84,7 +84,7 @@ function MetricsPage() {
     const recalculateMetrics = async () => {
         try {
             setCalculating(true);
-            const response = await fetch(`${API_BASE_URL}/api/metrics/codebases/${id}/calculate`, {
+            const response = await fetch(`${API_BASE_URL}/metrics/codebases/${id}/calculate`, {
                 method: 'POST'
             });
             const data = await response.json();

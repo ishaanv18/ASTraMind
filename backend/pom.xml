@@ -69,6 +69,13 @@
             <version>2.15.1</version>
         </dependency>
         
+        <!-- SendGrid for Email -->
+        <dependency>
+            <groupId>com.sendgrid</groupId>
+            <artifactId>sendgrid-java</artifactId>
+            <version>4.10.2</version>
+        </dependency>
+        
         <!-- JGit for GitHub Integration -->
         <dependency>
             <groupId>org.eclipse.jgit</groupId>

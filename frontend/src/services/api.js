@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+// Ensure base URL ends with /api (add it only if not already present)
 const API_BASE_URL = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
 
 const api = axios.create({

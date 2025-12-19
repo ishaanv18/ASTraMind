@@ -35,6 +35,9 @@ public class ASTParserService {
     @Autowired
     private CodeRelationshipRepository codeRelationshipRepository;
 
+    @Autowired
+    private CodebaseMetadataRepository codebaseMetadataRepository;
+
     private final JavaParser javaParser = new JavaParser();
 
     /**
@@ -83,23 +86,37 @@ public class ASTParserService {
     public void parseCodebase(Long codebaseId) {
         log.info("Starting AST parsing for codebase: {}", codebaseId);
 
-        List<CodeFile> javaFiles = codeFileRepository.findByCodebaseId(codebaseId)
-                .stream()
-                .filter(f -> "Java".equalsIgnoreCase(f.getLanguage()))
-                .collect(Collectors.toList());
+        try {
+            List<CodeFile> javaFiles = codeFileRepository.findByCodebaseId(codebaseId)
+                    .stream()
+                    .filter(f -> "Java".equalsIgnoreCase(f.getLanguage()))
+                    .collect(Collectors.toList());
 
-        log.info("Found {} Java files to parse", javaFiles.size());
+            log.info("Found {} Java files to parse", javaFiles.size());
 
-        int parsed = 0;
-        for (CodeFile file : javaFiles) {
-            parseJavaFile(file);
-            parsed++;
-            if (parsed % 10 == 0) {
-                log.info("Parsed {}/{} files", parsed, javaFiles.size());
+            int parsed = 0;
+            for (CodeFile file : javaFiles) {
+                parseJavaFile(file);
+                parsed++;
+                if (parsed % 10 == 0) {
+                    log.info("Parsed {}/{} files", parsed, javaFiles.size());
+                }
             }
-        }
 
-        log.info("Completed AST parsing for codebase: {}. Parsed {} files", codebaseId, parsed);
+            log.info("Completed AST parsing for codebase: {}. Parsed {} files", codebaseId, parsed);
+
+            // Mark codebase as parsed
+            Optional<CodebaseMetadata> codebaseOpt = codebaseMetadataRepository.findById(codebaseId);
+            if (codebaseOpt.isPresent()) {
+                CodebaseMetadata codebase = codebaseOpt.get();
+                codebase.setIsParsed(true);
+                codebaseMetadataRepository.save(codebase);
+                log.info("Marked codebase {} as parsed", codebaseId);
+            }
+        } catch (Exception e) {
+            log.error("Error during AST parsing for codebase {}: {}", codebaseId, e.getMessage(), e);
+            throw e; // Re-throw to ensure isParsed stays false on failure
+        }
     }
 
     /**

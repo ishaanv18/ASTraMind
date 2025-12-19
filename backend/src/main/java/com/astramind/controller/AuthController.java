@@ -21,7 +21,15 @@ public class AuthController {
     private final GitHubOAuthService githubOAuthService;
 
     @org.springframework.beans.factory.annotation.Value("${cors.allowed-origins:http://localhost:5173}")
-    private String frontendUrl;
+    private String allowedOrigins;
+
+    private String getFrontendUrl() {
+        // Extract the first origin from the comma-separated list
+        if (allowedOrigins.contains(",")) {
+            return allowedOrigins.split(",")[1].trim(); // Use second origin (5173) as it's the Vite dev server
+        }
+        return allowedOrigins;
+    }
 
     /**
      * Redirect to GitHub OAuth
@@ -60,12 +68,12 @@ public class AuthController {
 
             // Redirect to frontend dashboard
             return ResponseEntity.status(302)
-                    .header("Location", frontendUrl + "/dashboard")
+                    .header("Location", getFrontendUrl() + "/dashboard")
                     .build();
         } catch (Exception e) {
             log.error("Error during GitHub callback", e);
             return ResponseEntity.status(302)
-                    .header("Location", frontendUrl + "/login?error=auth_failed")
+                    .header("Location", getFrontendUrl() + "/login?error=auth_failed")
                     .build();
         }
     }

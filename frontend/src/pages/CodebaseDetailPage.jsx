@@ -39,7 +39,7 @@ function CodebaseDetailPage() {
                 try {
                     // Check if embeddings exist by doing a quick search
                     const response = await fetch(
-                        `${API_BASE_URL}/api/search/semantic?codebaseId=${id}&query=test&type=ALL&limit=1`,
+                        `${API_BASE_URL}/search/semantic?codebaseId=${id}&query=test&type=ALL&limit=1`,
                         { method: 'POST' }
                     );
                     const data = await response.json();
@@ -113,14 +113,44 @@ function CodebaseDetailPage() {
     const triggerParsing = async () => {
         try {
             setParsing(true);
-            await codebaseService.parseCodebase(id);
+            const response = await codebaseService.parseCodebase(id);
+
+            // Check if already parsed
+            if (response.alreadyParsed) {
+                addNotification('This codebase has already been parsed!', 'info');
+                setParsing(false);
+                return;
+            }
+
             addNotification('AST parsing started! This may take a few minutes for large codebases.', 'success');
-            // Wait a bit then load structure
-            setTimeout(() => loadCodeStructure(), 5000);
+
+            // Poll for completion (check every 5 seconds)
+            const checkInterval = setInterval(async () => {
+                try {
+                    const structure = await codebaseService.getCodeStructure(id);
+                    if (structure && structure.classes && structure.classes.length > 0) {
+                        clearInterval(checkInterval);
+                        setCodeStructure(structure);
+                        addNotification(`Parsing completed! Found ${structure.totalClasses} classes.`, 'success');
+                        // Reload codebase to update isParsed status
+                        const updatedCodebase = await codebaseService.getCodebase(id);
+                        setCodebase(updatedCodebase);
+                        setParsing(false);
+                    }
+                } catch (error) {
+                    // Still parsing, continue polling
+                }
+            }, 5000);
+
+            // Stop polling after 5 minutes
+            setTimeout(() => {
+                clearInterval(checkInterval);
+                setParsing(false);
+            }, 300000);
+
         } catch (error) {
             console.error('Error triggering parsing:', error);
             addNotification('Failed to start parsing', 'error');
-        } finally {
             setParsing(false);
         }
     };
@@ -139,7 +169,7 @@ function CodebaseDetailPage() {
     const triggerEmbeddingGeneration = async () => {
         try {
             setGeneratingEmbeddings(true);
-            const response = await fetch(`${API_BASE_URL}/api/embeddings/codebases/${id}/generate`, {
+            const response = await fetch(`${API_BASE_URL}/embeddings/codebases/${id}/generate`, {
                 method: 'POST'
             });
             const data = await response.json();
@@ -163,7 +193,7 @@ function CodebaseDetailPage() {
         try {
             setSearching(true);
             const response = await fetch(
-                `${API_BASE_URL}/api/search/semantic?codebaseId=${id}&query=${encodeURIComponent(query)}&type=ALL&limit=20`,
+                `${API_BASE_URL}/search/semantic?codebaseId=${id}&query=${encodeURIComponent(query)}&type=ALL&limit=20`,
                 { method: 'POST' }
             );
             const data = await response.json();
@@ -361,18 +391,34 @@ function CodebaseDetailPage() {
                         </div>
                     </div>
                     <div className="header-right">
-                        <GradientButton
-                            onClick={triggerParsing}
-                            disabled={parsing}
-                            variant="variant"
-                        >
-                            {parsing ? '⏳ Parsing...' : '🔍 Parse Code'}
-                        </GradientButton>
-                        {codeStructure && (
+                        {codebase?.isParsed ? (
+                            <div className="parsed-badge" style={{
+                                padding: '8px 16px',
+                                background: 'rgba(16, 185, 129, 0.1)',
+                                border: '1px solid rgba(16, 185, 129, 0.3)',
+                                borderRadius: '8px',
+                                color: '#10b981',
+                                fontSize: '14px',
+                                fontWeight: '500'
+                            }}>
+                                ✅ Already Parsed
+                            </div>
+                        ) : (
+                            <GradientButton
+                                onClick={triggerParsing}
+                                disabled={parsing}
+                                variant="variant"
+                            >
+                                {parsing ? '⏳ Parsing...' : '🔍 Parse Code'}
+                            </GradientButton>
+                        )}
+                        {(codeStructure || codebase?.isParsed) && (
                             <>
-                                <span className="structure-count">
-                                    {codeStructure.totalClasses} classes found
-                                </span>
+                                {codeStructure && (
+                                    <span className="structure-count">
+                                        {codeStructure.totalClasses} classes found
+                                    </span>
+                                )}
                                 <GradientButton
                                     onClick={() => navigate(`/codebases/${id}/graph`)}
                                     variant="variant"

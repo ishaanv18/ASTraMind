@@ -40,6 +40,15 @@ public class CodeStructureController {
                 return ResponseEntity.status(403).body(Map.of("error", "Forbidden"));
             }
 
+            // Check if already parsed
+            if (Boolean.TRUE.equals(codebase.getIsParsed())) {
+                log.info("Codebase {} is already parsed, skipping re-parse", id);
+                return ResponseEntity.ok(Map.of(
+                        "message", "Codebase has already been parsed",
+                        "codebaseId", id,
+                        "alreadyParsed", true));
+            }
+
             // Trigger parsing in background
             new Thread(() -> {
                 try {

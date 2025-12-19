@@ -33,13 +33,19 @@ public class CorsFilter implements Filter {
         logger.info("CORS Filter - Request from origin: {}", origin);
         logger.info("CORS Filter - Allowed origins: {}", allowedOrigins);
 
-        // Set CORS headers
-        response.setHeader("Access-Control-Allow-Origin", allowedOrigins);
-        response.setHeader("Access-Control-Allow-Credentials", "true");
-        response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
-        response.setHeader("Access-Control-Max-Age", "3600");
-        response.setHeader("Access-Control-Allow-Headers",
-                "Origin, X-Requested-With, Content-Type, Accept, Authorization, Cookie");
+        // Check if the origin is allowed
+        if (origin != null && allowedOrigins.contains(origin)) {
+            // Only set the specific origin that made the request
+            response.setHeader("Access-Control-Allow-Origin", origin);
+            response.setHeader("Access-Control-Allow-Credentials", "true");
+            response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+            response.setHeader("Access-Control-Max-Age", "3600");
+            response.setHeader("Access-Control-Allow-Headers",
+                    "Origin, X-Requested-With, Content-Type, Accept, Authorization, Cookie");
+            logger.info("CORS Filter - Allowed origin: {}", origin);
+        } else {
+            logger.warn("CORS Filter - Origin not allowed: {}", origin);
+        }
 
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             logger.info("CORS Filter - Handling OPTIONS preflight request");

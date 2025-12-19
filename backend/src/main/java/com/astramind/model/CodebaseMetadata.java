@@ -26,12 +26,16 @@ public class CodebaseMetadata {
     @Column(nullable = false)
     private String name;
 
+    @Column(length = 1000)
     private String description;
 
+    @Column(length = 255) // Assuming a reasonable length for primary language
     private String primaryLanguage;
 
+    @Column(length = 500) // Longer length for URL
     private String githubUrl;
 
+    @Column(length = 1000)
     private String localPath;
 
     private Integer fileCount = 0;
@@ -48,6 +52,9 @@ public class CodebaseMetadata {
 
     @Column(name = "error_message", columnDefinition = "TEXT")
     private String errorMessage;
+
+    @Column(name = "is_parsed")
+    private Boolean isParsed = false;
 
     @PrePersist
     protected void onCreate() {
