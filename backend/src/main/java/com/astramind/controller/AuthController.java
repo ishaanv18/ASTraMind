@@ -3,6 +3,7 @@ package com.astramind.controller;
 import com.astramind.dto.GitHubUserInfo;
 import com.astramind.model.User;
 import com.astramind.service.GitHubOAuthService;
+import com.astramind.util.JwtUtil;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,14 +20,24 @@ import java.util.Map;
 public class AuthController {
 
     private final GitHubOAuthService githubOAuthService;
+    private final JwtUtil jwtUtil;
 
     @org.springframework.beans.factory.annotation.Value("${cors.allowed-origins:http://localhost:5173}")
     private String allowedOrigins;
 
     private String getFrontendUrl() {
-        // Extract the first origin from the comma-separated list
+        // Extract origins from the comma-separated list
         if (allowedOrigins.contains(",")) {
-            return allowedOrigins.split(",")[1].trim(); // Use second origin (5173) as it's the Vite dev server
+            String[] origins = allowedOrigins.split(",");
+            // Prefer production URL (https) over localhost
+            for (String origin : origins) {
+                String trimmed = origin.trim();
+                if (trimmed.startsWith("https://")) {
+                    return trimmed;
+                }
+            }
+            // Fallback to first origin if no https found
+            return origins[0].trim();
         }
         return allowedOrigins;
     }
@@ -59,16 +70,23 @@ public class AuthController {
             // Create or update user in database
             User user = githubOAuthService.createOrUpdateUser(githubUserInfo, accessToken);
 
-            // Store user in session
+            // Store user in session (for backward compatibility)
             session.setAttribute("user", user);
             session.setAttribute("userId", user.getId());
             session.setAttribute("username", user.getUsername());
 
+            // Generate JWT token
+            String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getEmail());
+
             log.info("User {} logged in successfully", user.getUsername());
 
-            // Redirect to frontend dashboard
+            // Redirect to frontend dashboard with JWT token
+            String redirectUrl = String.format("%s/dashboard?token=%s",
+                    getFrontendUrl(),
+                    token);
+
             return ResponseEntity.status(302)
-                    .header("Location", getFrontendUrl() + "/dashboard")
+                    .header("Location", redirectUrl)
                     .build();
         } catch (Exception e) {
             log.error("Error during GitHub callback", e);
@@ -79,18 +97,44 @@ public class AuthController {
     }
 
     /**
-     * Get current user info
+     * Get current user info from JWT token
      */
     @GetMapping("/user")
-    public ResponseEntity<?> getCurrentUser(HttpSession session) {
-        Long userId = (Long) session.getAttribute("userId");
-        if (userId == null) {
-            return ResponseEntity.status(401).body(Map.of("error", "Not authenticated"));
+    public ResponseEntity<?> getCurrentUser(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        // Try JWT first
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            if (jwtUtil.validateToken(token)) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("userId", jwtUtil.getUserIdFromToken(token));
+                response.put("username", jwtUtil.getUsernameFromToken(token));
+                response.put("email", jwtUtil.getEmailFromToken(token));
+                return ResponseEntity.ok(response);
+            }
         }
 
+        // Fallback to session for backward compatibility
+        return ResponseEntity.status(401).body(Map.of("error", "Not authenticated"));
+    }
+
+    /**
+     * Validate JWT token
+     */
+    @PostMapping("/validate")
+    public ResponseEntity<Map<String, Object>> validateToken(@RequestBody Map<String, String> request) {
+        String token = request.get("token");
         Map<String, Object> response = new HashMap<>();
-        response.put("userId", userId);
-        response.put("username", session.getAttribute("username"));
+
+        if (token != null && jwtUtil.validateToken(token)) {
+            response.put("valid", true);
+            response.put("userId", jwtUtil.getUserIdFromToken(token));
+            response.put("username", jwtUtil.getUsernameFromToken(token));
+            response.put("email", jwtUtil.getEmailFromToken(token));
+            return ResponseEntity.ok(response);
+        }
+
+        response.put("valid", false);
         return ResponseEntity.ok(response);
     }
 
@@ -107,9 +151,20 @@ public class AuthController {
      * Check authentication status
      */
     @GetMapping("/status")
-    public ResponseEntity<Map<String, Boolean>> checkAuthStatus(HttpSession session) {
-        Long userId = (Long) session.getAttribute("userId");
+    public ResponseEntity<Map<String, Boolean>> checkAuthStatus(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            HttpSession session) {
         Map<String, Boolean> response = new HashMap<>();
+
+        // Check JWT token first
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            response.put("authenticated", jwtUtil.validateToken(token));
+            return ResponseEntity.ok(response);
+        }
+
+        // Fallback to session
+        Long userId = (Long) session.getAttribute("userId");
         response.put("authenticated", userId != null);
         return ResponseEntity.ok(response);
     }
