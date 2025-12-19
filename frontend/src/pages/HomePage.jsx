@@ -158,7 +158,7 @@ function HomePage() {
                 {/* Tech Stack Section */}
                 <section className="tech-stack-section">
                     <div className="tech-stack-container">
-                        <h2 className="section-title hero-title gradient-text" style={{ textShadow: '0 0 40px rgba(139, 92, 246, 0.5), 0 0 80px rgba(59, 130, 246, 0.3)' }}>
+                        <h2 className="tech-title">
                             Built with Modern Technologies
                         </h2>
                         <p className="section-subtitle">
