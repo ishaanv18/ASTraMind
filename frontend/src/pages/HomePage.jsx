@@ -136,7 +136,7 @@ function HomePage() {
                 {/* Features Section */}
                 <section className="features-section">
                     <div className="features-container">
-                        <h2 className="section-title">Powerful Features</h2>
+                        <h2 className="tech-title">Powerful Features</h2>
                         <p className="section-subtitle">
                             Everything you need to understand and analyze your codebase
                         </p>
