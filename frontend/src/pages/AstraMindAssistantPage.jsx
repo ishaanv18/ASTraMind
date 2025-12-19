@@ -4,6 +4,7 @@ import axios from 'axios';
 import GradientButton from '../components/GradientButton';
 import ToastContainer from '../components/ToastContainer';
 import './AstraMindAssistantPage.css';
+import API_BASE_URL from '../config/apiConfig';
 
 const AstraMindAssistantPage = () => {
     const { id } = useParams();
@@ -50,7 +51,7 @@ const AstraMindAssistantPage = () => {
 
     const checkAiStatus = async () => {
         try {
-            const response = await axios.get('http://localhost:8080/api/ai/status');
+            const response = await axios.get(`${API_BASE_URL}/api/ai/status`);
             setAiStatus(response.data);
         } catch (error) {
             console.error('Error checking AI status:', error);
@@ -60,7 +61,7 @@ const AstraMindAssistantPage = () => {
 
     const loadQuickActions = async () => {
         try {
-            const response = await axios.get(`http://localhost:8080/api/ai/quick-actions/${id}`);
+            const response = await axios.get(`${API_BASE_URL}/api/ai/quick-actions/${id}`);
             setQuickActions(response.data.actions || []);
         } catch (error) {
             console.error('Error loading quick actions:', error);
@@ -70,7 +71,7 @@ const AstraMindAssistantPage = () => {
     const checkAndGenerateEmbeddings = async () => {
         try {
             // Check if embeddings exist
-            const statsResponse = await axios.get(`http://localhost:8080/api/embeddings/codebases/${id}/stats`);
+            const statsResponse = await axios.get(`${API_BASE_URL}/api/embeddings/codebases/${id}/stats`);
             const embeddingCount = statsResponse.data.embeddingCount || 0;
             const classCount = statsResponse.data.classCount || 0;
             const methodCount = statsResponse.data.methodCount || 0;
@@ -97,7 +98,7 @@ const AstraMindAssistantPage = () => {
                     try {
                         addToast('Step 1/2: Generating class embeddings...', 'loading', 0);
 
-                        const classResponse = await axios.post(`http://localhost:8080/api/embeddings/codebases/${id}/classes`);
+                        const classResponse = await axios.post(`${API_BASE_URL}/api/embeddings/codebases/${id}/classes`);
 
                         if (classResponse.data.success) {
                             generatedClasses = classResponse.data.count || 0;
@@ -117,7 +118,7 @@ const AstraMindAssistantPage = () => {
                     try {
                         addToast('Step 2/2: Generating method embeddings...', 'loading', 0);
 
-                        const methodResponse = await axios.post(`http://localhost:8080/api/embeddings/codebases/${id}/methods`);
+                        const methodResponse = await axios.post(`${API_BASE_URL}/api/embeddings/codebases/${id}/methods`);
 
                         if (methodResponse.data.success) {
                             generatedMethods = methodResponse.data.count || 0;
@@ -135,7 +136,7 @@ const AstraMindAssistantPage = () => {
                 await new Promise(resolve => setTimeout(resolve, 2000));
 
                 // Final summary
-                const finalStatsResponse = await axios.get(`http://localhost:8080/api/embeddings/codebases/${id}/stats`);
+                const finalStatsResponse = await axios.get(`${API_BASE_URL}/api/embeddings/codebases/${id}/stats`);
                 const finalClassCount = finalStatsResponse.data.classCount || 0;
                 const finalMethodCount = finalStatsResponse.data.methodCount || 0;
                 const finalTotal = finalStatsResponse.data.embeddingCount || 0;
@@ -172,7 +173,7 @@ const AstraMindAssistantPage = () => {
         setIsLoading(true);
 
         try {
-            const response = await axios.post('http://localhost:8080/api/ai/ask', {
+            const response = await axios.post(`${API_BASE_URL}/api/ai/ask`, {
                 question: message,
                 codebaseId: parseInt(id)
             });

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './SearchPage.css';
+import API_BASE_URL from '../config/apiConfig';
 
 const SearchPage = () => {
     const { id: codebaseId } = useParams();
@@ -21,7 +22,7 @@ const SearchPage = () => {
 
         try {
             const response = await axios.post(
-                `http://localhost:8080/api/search/semantic`,
+                `${API_BASE_URL}/api/search/semantic`,
                 null,
                 {
                     params: {

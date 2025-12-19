@@ -13,6 +13,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../hooks/useNotification';
 import NotificationContainer from './NotificationContainer';
+import API_BASE_URL from '../config/apiConfig';
 
 function DependencyGraphView() {
     const { id } = useParams();
@@ -47,7 +48,7 @@ function DependencyGraphView() {
     const loadGraph = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`http://localhost:8080/api/codebases/${id}/graph`, {
+            const response = await fetch(`${API_BASE_URL}/api/codebases/${id}/graph`, {
                 credentials: 'include'
             });
 
