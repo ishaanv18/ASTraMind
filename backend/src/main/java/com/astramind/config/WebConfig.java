@@ -31,11 +31,16 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         logger.info("Configuring CORS mappings for: {}", frontendUrl);
+
+        // Parse allowed origins from environment variable
+        String[] origins = frontendUrl.split(",");
+        String[] trimmedOrigins = new String[origins.length];
+        for (int i = 0; i < origins.length; i++) {
+            trimmedOrigins[i] = origins[i].trim();
+        }
+
         registry.addMapping("/**")
-                .allowedOriginPatterns(
-                        "http://localhost:3000",
-                        "http://localhost:5173",
-                        "http://localhost:8080")
+                .allowedOriginPatterns(trimmedOrigins)
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                 .allowedHeaders("*")
                 .allowCredentials(true)

@@ -33,10 +33,41 @@ public class CorsFilter implements Filter {
         logger.info("CORS Filter - Request from origin: {}", origin);
         logger.info("CORS Filter - Allowed origins: {}", allowedOrigins);
 
-        // Check if the origin is allowed
-        if (origin != null && allowedOrigins.contains(origin)) {
-            // Only set the specific origin that made the request
-            response.setHeader("Access-Control-Allow-Origin", origin);
+        boolean isAllowed = false;
+
+        if (origin != null) {
+            // Check if origin matches any allowed origin (including wildcard patterns)
+            String[] allowedOriginList = allowedOrigins.split(",");
+            for (String allowedOrigin : allowedOriginList) {
+                allowedOrigin = allowedOrigin.trim();
+
+                // Handle wildcard patterns like https://*.vercel.app
+                if (allowedOrigin.contains("*")) {
+                    String pattern = allowedOrigin.replace(".", "\\.").replace("*", ".*");
+                    if (origin.matches(pattern)) {
+                        isAllowed = true;
+                        break;
+                    }
+                } else if (origin.equals(allowedOrigin)) {
+                    isAllowed = true;
+                    break;
+                }
+            }
+        } else {
+            // Allow null origin for development (e.g., file:// protocol, Postman, etc.)
+            // This is common during local development and testing
+            logger.info("CORS Filter - Null origin detected, allowing for development");
+            isAllowed = true;
+        }
+
+        if (isAllowed) {
+            // Set CORS headers
+            if (origin != null) {
+                response.setHeader("Access-Control-Allow-Origin", origin);
+            } else {
+                // For null origins, set to wildcard (development only)
+                response.setHeader("Access-Control-Allow-Origin", "*");
+            }
             response.setHeader("Access-Control-Allow-Credentials", "true");
             response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
             response.setHeader("Access-Control-Max-Age", "3600");
