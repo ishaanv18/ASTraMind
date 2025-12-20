@@ -36,12 +36,24 @@ api.interceptors.request.use(
 );
 
 // Handle 401 errors (unauthorized) - clear token and redirect to login
+// BUT: Don't redirect during auth check endpoints to avoid infinite loops
 api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response && error.response.status === 401) {
-            clearToken();
-            window.location.href = '/login';
+            const url = error.config?.url || '';
+
+            // Don't auto-redirect for auth check endpoints
+            // Let the AuthContext handle these failures gracefully
+            const isAuthCheckEndpoint = url.includes('/auth/status') ||
+                url.includes('/auth/user') ||
+                url.includes('/auth/validate');
+
+            if (!isAuthCheckEndpoint) {
+                // Only redirect for protected resource endpoints
+                clearToken();
+                window.location.href = '/login';
+            }
         }
         return Promise.reject(error);
     }

@@ -34,20 +34,32 @@ export const AuthProvider = ({ children }) => {
                     setUser(userInfo);
                     setAuthenticated(true);
                     setLoading(false);
-                    return;
+                    return; // Trust the token, don't call server
                 }
             }
 
-            // If no valid token, check with server (fallback to session)
-            const status = await authService.checkAuthStatus();
-            setAuthenticated(status.authenticated);
+            // If no valid token, try to check with server (fallback to session)
+            // This is for backward compatibility with session-based auth
+            try {
+                const status = await authService.checkAuthStatus();
 
-            if (status.authenticated) {
-                const userData = await authService.getCurrentUser();
-                setUser(userData);
-            } else {
-                // Clear invalid token
+                if (status.authenticated) {
+                    const userData = await authService.getCurrentUser();
+                    setUser(userData);
+                    setAuthenticated(true);
+                } else {
+                    // Not authenticated, clear any invalid token
+                    clearToken();
+                    setAuthenticated(false);
+                    setUser(null);
+                }
+            } catch (apiError) {
+                // Server API call failed, but don't automatically logout
+                // Just mark as not authenticated and let user try to login
+                console.error('Auth status check failed:', apiError);
                 clearToken();
+                setAuthenticated(false);
+                setUser(null);
             }
         } catch (error) {
             console.error('Auth check failed:', error);
