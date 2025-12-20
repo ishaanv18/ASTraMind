@@ -18,24 +18,33 @@ const DashboardPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [analyzingRepos, setAnalyzingRepos] = useState(new Set());
     const [hasShownWelcome, setHasShownWelcome] = useState(false);
+    const [isProcessingToken, setIsProcessingToken] = useState(false);
 
     // Handle OAuth callback with JWT token
     useEffect(() => {
         const tokenReceived = handleAuthCallback();
         if (tokenReceived) {
             // Token was extracted and stored, refresh auth state
-            checkAuth();
-            showNotification('Login successful! Welcome back! 🎉', 'success');
+            setIsProcessingToken(true);
+            checkAuth().finally(() => {
+                setIsProcessingToken(false);
+                showNotification('Login successful! Welcome back! 🎉', 'success');
+            });
         }
     }, [checkAuth]);
 
     useEffect(() => {
+        // Don't redirect while processing token from OAuth callback
+        if (isProcessingToken) {
+            return;
+        }
+
         if (!authenticated) {
             navigate('/login');
             return;
         }
         loadRepositories();
-    }, [authenticated, navigate]);
+    }, [authenticated, navigate, isProcessingToken]);
 
     const loadRepositories = async () => {
         try {
