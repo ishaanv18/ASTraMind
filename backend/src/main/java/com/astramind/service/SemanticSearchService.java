@@ -1,7 +1,9 @@
 package com.astramind.service;
 
 import com.astramind.model.CodeEmbedding;
+import com.astramind.model.CodeFile;
 import com.astramind.repository.CodeEmbeddingRepository;
+import com.astramind.repository.CodeFileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +17,9 @@ public class SemanticSearchService {
 
     @Autowired
     private CodeEmbeddingRepository codeEmbeddingRepository;
+
+    @Autowired
+    private CodeFileRepository codeFileRepository;
 
     /**
      * Search code using natural language query
@@ -32,9 +37,16 @@ public class SemanticSearchService {
                 return new ArrayList<>();
             }
 
-            // Get all embeddings for the codebase by file IDs
-            List<CodeEmbedding> allEmbeddings = codeEmbeddingRepository
-                    .findByCodeFileId(codebaseId);
+            // Get all files for this codebase
+            List<CodeFile> codebaseFiles = codeFileRepository.findByCodebaseId(codebaseId);
+            System.out.println("Found " + codebaseFiles.size() + " files in codebase");
+
+            // Get all embeddings for these files
+            List<CodeEmbedding> allEmbeddings = new ArrayList<>();
+            for (CodeFile file : codebaseFiles) {
+                List<CodeEmbedding> fileEmbeddings = codeEmbeddingRepository.findByCodeFileId(file.getId());
+                allEmbeddings.addAll(fileEmbeddings);
+            }
 
             System.out.println("Found " + allEmbeddings.size() + " embeddings to search");
 

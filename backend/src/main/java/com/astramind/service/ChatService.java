@@ -40,15 +40,20 @@ public class ChatService {
             StringBuilder context = new StringBuilder();
             List<Map<String, Object>> sources = new ArrayList<>();
 
-            for (Map<String, Object> code : relevantCode) {
-                context.append(code.get("textContent")).append("\n\n");
+            if (relevantCode.isEmpty()) {
+                System.out.println("⚠️  No relevant code found for question: " + question);
+                context.append("No relevant code snippets were found in the codebase for this question.");
+            } else {
+                for (Map<String, Object> code : relevantCode) {
+                    context.append(code.get("textContent")).append("\n\n");
 
-                Map<String, Object> source = new HashMap<>();
-                source.put("type", code.get("type"));
-                source.put("name", code.get("name"));
-                source.put("id", code.get("id"));
-                source.put("similarity", code.get("similarity"));
-                sources.add(source);
+                    Map<String, Object> source = new HashMap<>();
+                    source.put("type", code.get("type"));
+                    source.put("name", code.get("elementName"));
+                    source.put("id", code.get("codeClassId"));
+                    source.put("similarity", code.get("similarity"));
+                    sources.add(source);
+                }
             }
 
             // Build system instruction
