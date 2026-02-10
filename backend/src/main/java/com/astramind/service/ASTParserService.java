@@ -8,7 +8,6 @@ import com.github.javaparser.ast.body.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +35,6 @@ public class ASTParserService {
     /**
      * Parse a single Java file and extract code structure
      */
-    @Transactional
     public void parseJavaFile(CodeFile file) {
         try {
             log.info("Parsing file: {}", file.getFilePath());
@@ -75,7 +73,6 @@ public class ASTParserService {
     /**
      * Parse all Java files in a codebase
      */
-    @Transactional
     public void parseCodebase(String codebaseId) {
         log.info("Starting AST parsing for codebase: {}", codebaseId);
 

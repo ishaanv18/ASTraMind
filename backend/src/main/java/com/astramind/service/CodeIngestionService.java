@@ -19,7 +19,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.io.IOException;
@@ -73,7 +72,6 @@ public class CodeIngestionService {
      * Start ingestion of a GitHub repository
      */
     @Async
-    @Transactional
     public void ingestRepository(String userId, String owner, String repoName) {
         logger.info("Starting ingestion for repository: {}/{} by user: {}", owner, repoName, userId);
 
@@ -299,7 +297,6 @@ public class CodeIngestionService {
     /**
      * Delete codebase and cleanup all related data
      */
-    @Transactional
     public void deleteCodebase(String codebaseId) {
         CodebaseMetadata codebase = getCodebase(codebaseId);
         logger.info("Starting deletion of codebase: {} (ID: {})", codebase.getName(), codebaseId);

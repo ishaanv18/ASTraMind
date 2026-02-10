@@ -9,7 +9,6 @@ import com.astramind.repository.CodeEmbeddingRepository;
 import com.astramind.repository.CodeFileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +32,6 @@ public class EmbeddingService {
     /**
      * Delete all embeddings for a specific codebase
      */
-    @Transactional
     public void deleteEmbeddingsForCodebase(String codebaseId) {
         System.out.println("🗑️  Deleting old embeddings for codebase " + codebaseId);
 
@@ -55,7 +53,6 @@ public class EmbeddingService {
     /**
      * Generate embeddings for all classes in a codebase
      */
-    @Transactional
     public int generateClassEmbeddings(String codebaseId) {
         // First, delete all existing CLASS embeddings for this codebase
         System.out.println("🗑️  Clearing old CLASS embeddings...");
@@ -136,7 +133,6 @@ public class EmbeddingService {
     /**
      * Generate embeddings for all methods in a codebase
      */
-    @Transactional
     public int generateMethodEmbeddings(String codebaseId) {
         // First, delete all existing METHOD embeddings for this codebase
         System.out.println("🗑️  Clearing old METHOD embeddings...");
@@ -238,7 +234,6 @@ public class EmbeddingService {
     /**
      * Update embedding for a single class
      */
-    @Transactional
     public void updateClassEmbedding(CodeClass codeClass) {
         try {
             // Delete existing embedding
@@ -268,7 +263,6 @@ public class EmbeddingService {
      * Update embedding for a single method (methods are now embedded, so this
      * updates via the class)
      */
-    @Transactional
     public void updateMethodEmbedding(CodeMethod method, String classId, String className) {
         try {
             // Note: Methods are embedded, so we can't query by method ID directly

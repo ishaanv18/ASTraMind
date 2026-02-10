@@ -4,7 +4,6 @@ import com.astramind.model.*;
 import com.astramind.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -28,7 +27,6 @@ public class MetricsService {
     @Autowired
     private CodeRelationshipRepository relationshipRepository;
 
-    @Transactional
     public Map<String, Object> calculateCodebaseMetrics(String codebaseId) {
         CodebaseMetadata codebase = codebaseRepository.findById(codebaseId)
                 .orElseThrow(() -> new RuntimeException("Codebase not found"));
