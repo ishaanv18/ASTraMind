@@ -1,0 +1,114 @@
+/* Gradient Button Styles */
+.gradient-button {
+    /* Base styles */
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-width: 132px;
+    padding: 1rem 2.25rem;
+    border: none;
+    border-radius: 11px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    appearance: none;
+
+    /* Gradient background */
+    background: radial-gradient(150% 180.06% at 11.14% 140%,
+            #000 37.35%,
+            #08012c 61.36%,
+            #4e1e40 78.42%,
+            #70464e 89.52%,
+            #88394c 100%);
+
+    /* Smooth transitions */
+    transition: all 0.5s ease;
+}
+
+/* Border gradient effect */
+.gradient-button::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(20deg,
+            hsla(340, 75%, 60%, 0.2),
+            hsla(340, 75%, 40%, 0.75));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+/* Hover effect */
+.gradient-button:hover:not(:disabled) {
+    background: radial-gradient(120.24% 103.18% at 0% 91.51%,
+            #c96287 0%,
+            #c66c64 8.8%,
+            #cc7d23 21.44%,
+            #37140a 71.34%,
+            #000 85.76%);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(201, 98, 135, 0.4);
+}
+
+.gradient-button:hover:not(:disabled)::before {
+    background: linear-gradient(190deg,
+            hsla(340, 78%, 90%, 0.1),
+            hsla(340, 75%, 90%, 0.6));
+}
+
+/* Variant style */
+.gradient-button-variant {
+    background: radial-gradient(150% 180.06% at 11.14% 140%,
+            #000022 37.35%,
+            #1f3f6d 61.36%,
+            #469396 78.42%,
+            #f1ffa5 89.52%,
+            #f1ffa5 100%);
+}
+
+.gradient-button-variant::before {
+    background: linear-gradient(200deg,
+            hsla(320, 75%, 90%, 0.6),
+            hsla(320, 50%, 90%, 0.15));
+}
+
+.gradient-button-variant:hover:not(:disabled) {
+    background: radial-gradient(110.24% 110.2% at 0% 95.51%,
+            #000020 0%,
+            #f1ffa5 10%,
+            #469396 35.44%,
+            #1f3f6d 71.34%,
+            #000 90.76%);
+    box-shadow: 0 10px 30px rgba(70, 147, 150, 0.4);
+}
+
+.gradient-button-variant:hover:not(:disabled)::before {
+    background: linear-gradient(210deg,
+            hsla(320, 75%, 90%, 0.2),
+            hsla(320, 50%, 90%, 0.75));
+}
+
+/* Disabled state */
+.gradient-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Focus state */
+.gradient-button:focus-visible {
+    outline: 2px solid rgba(99, 102, 241, 0.5);
+    outline-offset: 2px;
+}
+
+/* Active state */
+.gradient-button:active:not(:disabled) {
+    transform: translateY(0);
+}
