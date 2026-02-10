@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -16,9 +16,9 @@ const DashboardPage = () => {
     const [repositories, setRepositories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [analyzingRepos, setAnalyzingRepos] = useState(new Set());
-    const [hasShownWelcome, setHasShownWelcome] = useState(false);
+    const [analyzingRepos, setAnalyzingRepos] = useState(new Map()); // Map repoKey -> codebaseId
     const [isProcessingToken, setIsProcessingToken] = useState(false);
+    const hasShownWelcomeRef = useRef(false);
 
     // Handle OAuth callback with JWT token
     useEffect(() => {
@@ -28,10 +28,13 @@ const DashboardPage = () => {
             setIsProcessingToken(true);
             checkAuth().finally(() => {
                 setIsProcessingToken(false);
-                showNotification('Login successful! Welcome back! 🎉', 'success');
+                if (!hasShownWelcomeRef.current && user) {
+                    showNotification(`Welcome back, ${user.username}! 🎉`, 'success');
+                    hasShownWelcomeRef.current = true;
+                }
             });
         }
-    }, [checkAuth]);
+    }, [checkAuth, user]);
 
     useEffect(() => {
         // Don't redirect while processing token from OAuth callback
@@ -51,12 +54,6 @@ const DashboardPage = () => {
             setLoading(true);
             const repos = await githubService.listRepositories();
             setRepositories(repos);
-
-            // Show welcome notification on first load
-            if (!hasShownWelcome && user) {
-                showNotification(`Welcome back, ${user.username}! 🎉`, 'success');
-                setHasShownWelcome(true);
-            }
         } catch (error) {
             console.error('Error loading repositories:', error);
         } finally {
@@ -71,21 +68,85 @@ const DashboardPage = () => {
 
     const handleAnalyzeRepository = async (repo) => {
         const repoKey = `${repo.owner}/${repo.name}`;
-        setAnalyzingRepos(prev => new Set(prev).add(repoKey));
 
         try {
-            await codebaseService.ingestRepository(repo.owner, repo.name);
-            showNotification(`Started analyzing ${repo.name}`, 'success');
+            const result = await codebaseService.ingestRepository(repo.owner, repo.name);
+            const codebaseId = result.codebaseId || result.id;
+
+            setAnalyzingRepos(prev => new Map(prev).set(repoKey, codebaseId));
+            showNotification(`Started analyzing ${repo.name}`, 'info', 'This may take a few minutes...');
+
+            // Start polling for completion
+            pollCodebaseStatus(codebaseId, repo.name, repoKey);
         } catch (error) {
             console.error('Error analyzing repository:', error);
-            showNotification(`Failed to analyze ${repo.name}`, 'error');
-        } finally {
-            setAnalyzingRepos(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(repoKey);
-                return newSet;
-            });
+            showNotification(`Failed to analyze ${repo.name}`, 'error', error.message || 'Please try again later');
         }
+    };
+
+    const pollCodebaseStatus = async (codebaseId, repoName, repoKey) => {
+        const maxAttempts = 60; // Poll for up to 5 minutes (60 * 5s)
+        let attempts = 0;
+
+        const poll = setInterval(async () => {
+            attempts++;
+
+            try {
+                const status = await codebaseService.getCodebaseStatus(codebaseId);
+
+                if (status.status === 'COMPLETED') {
+                    clearInterval(poll);
+                    setAnalyzingRepos(prev => {
+                        const newMap = new Map(prev);
+                        newMap.delete(repoKey);
+                        return newMap;
+                    });
+                    showNotification(
+                        `Analysis complete for ${repoName}! 🎉`,
+                        'success',
+                        `${status.fileCount || 0} files analyzed`,
+                        {
+                            actionLabel: 'View',
+                            onAction: () => navigate('/codebases')
+                        }
+                    );
+                } else if (status.status === 'FAILED') {
+                    clearInterval(poll);
+                    setAnalyzingRepos(prev => {
+                        const newMap = new Map(prev);
+                        newMap.delete(repoKey);
+                        return newMap;
+                    });
+                    showNotification(
+                        `Analysis failed for ${repoName}`,
+                        'error',
+                        status.errorMessage || 'An error occurred during analysis'
+                    );
+                } else if (attempts >= maxAttempts) {
+                    clearInterval(poll);
+                    setAnalyzingRepos(prev => {
+                        const newMap = new Map(prev);
+                        newMap.delete(repoKey);
+                        return newMap;
+                    });
+                    showNotification(
+                        `Analysis timeout for ${repoName}`,
+                        'warning',
+                        'Check the codebases page for status'
+                    );
+                }
+            } catch (error) {
+                console.error('Error polling status:', error);
+                if (attempts >= maxAttempts) {
+                    clearInterval(poll);
+                    setAnalyzingRepos(prev => {
+                        const newMap = new Map(prev);
+                        newMap.delete(repoKey);
+                        return newMap;
+                    });
+                }
+            }
+        }, 5000); // Poll every 5 seconds
     };
 
     const filteredRepos = repositories.filter(repo =>

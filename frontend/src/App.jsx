@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import NotificationContainer from './components/NotificationContainer';
+import { NotificationProvider } from './components/NotificationProvider';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
@@ -18,21 +18,22 @@ function AppContent() {
   const { user } = useAuth();
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/codebases" element={<CodebasesPage />} />
-        <Route path="/codebases/:id" element={<CodebaseDetailPage />} />
-        <Route path="/codebases/:id/search" element={<SearchPage />} />
-        <Route path="/codebases/:id/graph" element={<DependencyGraphView />} />
-        <Route path="/codebases/:id/metrics" element={<MetricsPage />} />
-        <Route path="/codebases/:id/ai" element={<AstraMindAssistantPage />} />
-      </Routes>
-      <NotificationContainer />
-      <FeedbackModal user={user} />
-    </Router>
+    <NotificationProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/codebases" element={<CodebasesPage />} />
+          <Route path="/codebases/:id" element={<CodebaseDetailPage />} />
+          <Route path="/codebases/:id/search" element={<SearchPage />} />
+          <Route path="/codebases/:id/graph" element={<DependencyGraphView />} />
+          <Route path="/codebases/:id/metrics" element={<MetricsPage />} />
+          <Route path="/codebases/:id/ai" element={<AstraMindAssistantPage />} />
+        </Routes>
+        <FeedbackModal user={user} />
+      </Router>
+    </NotificationProvider>
   );
 }
 
