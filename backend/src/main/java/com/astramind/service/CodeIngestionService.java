@@ -136,11 +136,14 @@ public class CodeIngestionService {
 
         logger.info("Cloning repository from: {} to: {}", cloneUrl, localPath);
 
-        // Clone repository
+        // Clone repository (Shallow clone for memory efficiency)
         Git.cloneRepository()
                 .setURI(cloneUrl)
                 .setDirectory(new File(localPath))
                 .setCredentialsProvider(new UsernamePasswordCredentialsProvider(accessToken, ""))
+                .setDepth(1) // Shallow clone - only latest commit
+                .setCloneAllBranches(false) // Only default branch
+                .setNoTags() // Don't fetch tags
                 .call()
                 .close();
 
