@@ -35,7 +35,7 @@
             <artifactId>spring-boot-starter-data-mongodb</artifactId>
         </dependency>
         
-        <!-- Spring Data Neo4j -->
+        <!-- Spring Boot Data MongoDB -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-neo4j</artifactId>
