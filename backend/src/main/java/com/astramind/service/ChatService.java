@@ -33,7 +33,7 @@ public class ChatService {
                     codebaseId,
                     question,
                     "ALL",
-                    5 // Top 5 most relevant pieces of code
+                    8 // Top 8 most relevant pieces of code
             );
 
             // Build context from relevant code
@@ -45,11 +45,16 @@ public class ChatService {
                 context.append("No relevant code snippets were found in the codebase for this question.");
             } else {
                 for (Map<String, Object> code : relevantCode) {
-                    context.append(code.get("textContent")).append("\n\n");
+                    String type = (String) code.get("type");
+                    String name = (String) code.get("elementName");
+
+                    context.append("--- SOURCE: ").append(type).append(" ").append(name).append(" ---\n");
+                    context.append(code.get("textContent")).append("\n");
+                    context.append("--- END SOURCE ---\n\n");
 
                     Map<String, Object> source = new HashMap<>();
-                    source.put("type", code.get("type"));
-                    source.put("name", code.get("elementName"));
+                    source.put("type", type);
+                    source.put("name", name);
                     source.put("id", code.get("codeClassId"));
                     source.put("similarity", code.get("similarity"));
                     sources.add(source);
@@ -58,10 +63,13 @@ public class ChatService {
 
             // Build system instruction
             String systemInstruction = "You are a code analysis assistant helping developers understand their codebase. "
-                    +
-                    "Answer questions based on the provided code context. " +
-                    "Be concise, accurate, and cite specific classes or methods when relevant. " +
-                    "If the context doesn't contain enough information, say so honestly.";
+                    + "Your goal is to answer questions ACCURATELY based ONLY on the provided code context.\n\n"
+                    + "RULES:\n"
+                    + "1. Answer strictly based on the provided Context. Do NOT use outside knowledge or make assumptions.\n"
+                    + "2. If the Context does not contain the answer, explicitly state: \"I cannot answer this based on the retrieved code.\"\n"
+                    + "3. Cite the specific classes or methods you are referencing.\n"
+                    + "4. Be concise and technical.\n"
+                    + "5. If the user asks for code that isn't in the context, do not invent it.";
 
             // Generate response using configured AI provider
             String answer = aiServiceFactory.getProvider().generateResponse(
