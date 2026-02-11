@@ -2,6 +2,7 @@ package com.astramind.controller;
 
 import com.astramind.service.ai.AIProvider;
 import com.astramind.service.ai.AIServiceFactory;
+import com.astramind.service.ChatService;
 import com.astramind.service.RAGService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,9 @@ public class AIAssistantController {
     @Autowired
     private RAGService ragService;
 
+    @Autowired
+    private ChatService chatService;
+
     /**
      * Ask a question about the codebase
      */
@@ -28,23 +32,10 @@ public class AIAssistantController {
         try {
             String question = (String) request.get("question");
             String codebaseId = (String) request.get("codebaseId");
+            String conversationId = (String) request.get("conversationId");
 
-            // Retrieve relevant context using RAG
-            Map<String, Object> context = ragService.retrieveContext(question, codebaseId, 5, 5);
-
-            // Format context for prompt
-            String formattedContext = ragService.formatContextForPrompt(context);
-
-            // Generate response using AI provider (Ollama or Groq based on config)
-            AIProvider aiProvider = aiServiceFactory.getProvider();
-            String systemPrompt = "You are AstraMind, a senior software engineer AI assistant. You analyze Java codebases and provide expert insights. Be concise, accurate, and cite specific classes or methods when relevant.";
-            String answer = aiProvider.generateResponse(systemPrompt,
-                    "Context:\n" + formattedContext + "\n\nQuestion: " + question);
-
-            // Build response
-            Map<String, Object> response = new HashMap<>();
-            response.put("answer", answer);
-            response.put("context", context);
+            // Use ChatService to handle the question with conversation history
+            Map<String, Object> response = chatService.askQuestion(codebaseId, question, conversationId);
             response.put("success", true);
 
             return ResponseEntity.ok(response);
