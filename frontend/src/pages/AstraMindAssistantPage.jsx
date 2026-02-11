@@ -175,7 +175,7 @@ const AstraMindAssistantPage = () => {
         try {
             const response = await axios.post(`${API_BASE_URL}/api/ai/ask`, {
                 question: message,
-                codebaseId: parseInt(id)
+                codebaseId: id // Don't parse as int, it's a Mongo ObjectId string
             });
 
             // Add AI response
