@@ -31,7 +31,11 @@ public class AIAssistantController {
     public ResponseEntity<Map<String, Object>> askQuestion(@RequestBody Map<String, Object> request) {
         try {
             String question = (String) request.get("question");
-            String codebaseId = (String) request.get("codebaseId");
+
+            // Handle codebaseId safely (could be Integer or String)
+            Object codebaseIdObj = request.get("codebaseId");
+            String codebaseId = codebaseIdObj != null ? String.valueOf(codebaseIdObj) : null;
+
             String conversationId = (String) request.get("conversationId");
 
             // Use ChatService to handle the question with conversation history
