@@ -306,14 +306,19 @@ public class CodeIngestionService {
 
         // Delete files from disk first
         if (codebase.getLocalPath() != null) {
-            try {
-                Files.walk(Paths.get(codebase.getLocalPath()))
-                        .sorted(Comparator.reverseOrder())
-                        .map(Path::toFile)
-                        .forEach(File::delete);
-                logger.info("Deleted local files for codebase: {}", codebaseId);
-            } catch (IOException e) {
-                logger.warn("Error deleting codebase files: {}", codebase.getLocalPath(), e);
+            Path path = Paths.get(codebase.getLocalPath());
+            if (Files.exists(path)) {
+                try {
+                    Files.walk(path)
+                            .sorted(Comparator.reverseOrder())
+                            .map(Path::toFile)
+                            .forEach(File::delete);
+                    logger.info("Deleted local files for codebase: {}", codebaseId);
+                } catch (IOException e) {
+                    logger.warn("Error deleting codebase files: {}", codebase.getLocalPath(), e);
+                }
+            } else {
+                logger.info("Local files already deleted or not found: {}", codebase.getLocalPath());
             }
         }
 
