@@ -178,30 +178,40 @@ async def _run_indexing(repo_id: str, repo_path: str, repo_name: str, github_use
                 progress["message"]    = f"Parsing {done}/{total_files}: {rel_path}"
                 await cache.set_progress(repo_id, progress)
 
-        # ── Phase B: Embed ALL chunks in one big batch ────────────────────────
+        # ── Phase B & C: Embed and Upsert in memory-safe batches ──────────────
+        # Render Free Tier has 512MB RAM. Passing thousands of chunks to ONNX at once
+        # causes an OOM kill, which terminates the Uvicorn process and throws
+        # CORS/Network errors on the frontend. We batch into chunks of 100 to
+        # keep memory flat while still vastly outperforming the original 1-by-1 logic.
         progress["percent"] = 55.0
-        progress["message"] = f"Embedding {len(all_chunks)} chunks..."
+        progress["message"] = f"Embedding & uploading {len(all_chunks)} chunks..."
         await cache.set_progress(repo_id, progress)
 
         if all_chunks:
+            BATCH_SIZE = 100
+            total_chunks = len(all_chunks)
             loop = asyncio.get_event_loop()
-            texts = [c["content"] for c in all_chunks]
-            # embed_batch handles arbitrary sizes; ONNX is efficient at large batches
-            all_embeddings = await loop.run_in_executor(
-                None, embedder.embed_batch, texts
-            )
-            for chunk, emb in zip(all_chunks, all_embeddings):
-                chunk["embedding"] = emb
 
-        # ── Phase C: Upsert ALL chunks to Qdrant (ONE network call) ──────────
-        progress["percent"] = 75.0
-        progress["message"] = f"Uploading {len(all_chunks)} vectors to Qdrant..."
-        await cache.set_progress(repo_id, progress)
+            for i in range(0, total_chunks, BATCH_SIZE):
+                batch = all_chunks[i:i + BATCH_SIZE]
+                texts = [c["content"] for c in batch]
 
-        if all_chunks:
-            await asyncio.get_event_loop().run_in_executor(
-                None, vector.upsert_chunks, repo_id, all_chunks
-            )
+                # 1. Embed batch (CPU-bound ONNX)
+                embeddings = await loop.run_in_executor(
+                    None, embedder.embed_batch, texts
+                )
+                for chunk, emb in zip(batch, embeddings):
+                    chunk["embedding"] = emb
+
+                # 2. Upsert batch (Network I/O)
+                await loop.run_in_executor(
+                    None, vector.upsert_chunks, repo_id, batch
+                )
+
+                done_percent = 55.0 + (((i + len(batch)) / total_chunks) * 35.0)
+                progress["percent"] = round(done_percent, 1)
+                progress["message"] = f"Processed {min(i + BATCH_SIZE, total_chunks)}/{total_chunks} vectors..."
+                await cache.set_progress(repo_id, progress)
 
         # ── Phase D: Bulk insert file metadata (ONE DB connection) ────────────
         progress["percent"] = 90.0
