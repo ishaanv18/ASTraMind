@@ -38,12 +38,15 @@ VOLUME ["/data"]
 # ── API port ─────────────────────────────────────────────────────────────────
 EXPOSE 8000
 
-# ── Health check ─────────────────────────────────────────────────────────────
-HEALTHCHECK --interval=30s --timeout=10s --start-period=20s \
+# ── Health check (extended start-period for slow cold starts on free tier) ───
+HEALTHCHECK --interval=30s --timeout=15s --start-period=120s \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
 
-# ── Production server (no --reload in prod) ───────────────────────────────────
+# ── Production server ───────────────────────────────────────────────────────
+# workers=1: Render free tier has 512MB RAM. sentence-transformers + torch
+# uses ~400MB alone, so 2 workers = OOM crash. Keep at 1 for free tier.
 CMD ["python", "-m", "uvicorn", "main:app", \
      "--host", "0.0.0.0", \
      "--port", "8000", \
-     "--workers", "2"]
+     "--workers", "1", \
+     "--timeout-keep-alive", "120"]

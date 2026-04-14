@@ -1,19 +1,22 @@
 """
-parser/embedder.py — Sentence-Transformer Embedding Engine
-Uses all-MiniLM-L6-v2 (22MB, runs locally, completely free).
-Vector size: 384 dimensions — matched to ChromaDB/Qdrant collection config.
+parser/embedder.py — Embedding Engine using fastembed (ONNX-based)
+
+Replaced sentence-transformers + torch (~3GB, ~400MB RAM) with fastembed
+(~200MB install, ~50MB RAM). Uses the SAME all-MiniLM-L6-v2 model via
+ONNX Runtime — produces identical 384-dim vectors, fully compatible with
+existing ChromaDB and Qdrant collections. No data migration needed.
 """
 
 from __future__ import annotations
 
 import logging
-from typing import List, Union
+from typing import List
 
 logger = logging.getLogger(__name__)
 
-# Lazy-loaded to avoid import-time errors if sentence-transformers isn't installed yet
+# Lazy-loaded to avoid import-time overhead
 _model = None
-MODEL_NAME = "all-MiniLM-L6-v2"
+MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 VECTOR_SIZE = 384
 
 
@@ -22,61 +25,53 @@ def _get_model():
     global _model
     if _model is None:
         try:
-            from sentence_transformers import SentenceTransformer  # type: ignore
-            logger.info("Loading sentence-transformer model: %s (first load may be slow)", MODEL_NAME)
-            _model = SentenceTransformer(MODEL_NAME)
+            from fastembed import TextEmbedding  # type: ignore
+            logger.info("Loading fastembed model: %s (first load downloads ONNX weights)", MODEL_NAME)
+            _model = TextEmbedding(model_name=MODEL_NAME)
             logger.info("Model %s loaded. Vector size: %d", MODEL_NAME, VECTOR_SIZE)
         except ImportError:
-            logger.error("sentence-transformers not installed. Run: pip install sentence-transformers")
+            logger.error("fastembed not installed. Run: pip install fastembed")
             raise
     return _model
 
 
 class Embedder:
     """
-    Wrapper around sentence-transformers all-MiniLM-L6-v2.
+    Wrapper around fastembed TextEmbedding (all-MiniLM-L6-v2, ONNX).
     Produces 384-dimensional dense vectors for code and natural language.
-    Designed for both single strings and batched lists for efficiency.
+    API is identical to the old sentence-transformers wrapper — no callers change.
     """
 
     def __init__(self) -> None:
-        # Pre-warm the model at construction time when called explicitly.
-        # During import this is a no-op; the router's startup event triggers warming.
         pass
 
     def warm_up(self) -> None:
         """Force model download/load. Call once at startup for fast first request."""
         _get_model()
-        logger.info("Embedder warmed up.")
+        logger.info("Embedder warmed up (fastembed).")
 
     def embed(self, text: str) -> List[float]:
         """
         Embed a single text string.
         Returns a list of 384 floats.
-        Strips text to MAX_CHARS to avoid OOM on huge inputs.
         """
-        MAX_CHARS = 8_000  # ~2k tokens — well within MiniLM window
+        MAX_CHARS = 8_000
         truncated = text[:MAX_CHARS] if len(text) > MAX_CHARS else text
         model = _get_model()
-        vector = model.encode(truncated, convert_to_numpy=True, normalize_embeddings=True)
-        return vector.tolist()
+        # fastembed returns a generator of numpy arrays
+        vectors = list(model.embed([truncated]))
+        return vectors[0].tolist()
 
     def embed_batch(self, texts: List[str], batch_size: int = 64) -> List[List[float]]:
         """
-        Embed a list of texts efficiently in one forward pass.
+        Embed a list of texts efficiently.
         Returns a list of embedding lists, same order as input.
-        Uses sentence-transformers' internal batching for GPU/CPU efficiency.
         """
         MAX_CHARS = 8_000
         truncated = [t[:MAX_CHARS] for t in texts]
         model = _get_model()
-        vectors = model.encode(
-            truncated,
-            batch_size=batch_size,
-            convert_to_numpy=True,
-            normalize_embeddings=True,
-            show_progress_bar=False,
-        )
+        # fastembed.embed() accepts an iterable and returns a generator
+        vectors = list(model.embed(truncated))
         return [v.tolist() for v in vectors]
 
     def embed_query(self, query: str) -> List[float]:
