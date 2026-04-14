@@ -30,6 +30,7 @@ from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.future import select
 from sqlalchemy.orm import DeclarativeBase, relationship
+from sqlalchemy.pool import NullPool
 
 from config import settings
 
@@ -161,29 +162,35 @@ class DatabaseClient:
 
         if self._env == "production":
             db_url = settings.DATABASE_URL
-            # CRITICAL: Supabase uses PgBouncer in "transaction" mode which does NOT
-            # support asyncpg prepared statements. Setting prepared_statement_cache_size=0
-            # disables the prepared statement cache entirely, fixing the
-            # DuplicatePreparedStatementError on every query.
-            connect_args: Dict[str, Any] = {
-                "prepared_statement_cache_size": 0,
-                "statement_cache_size": 0,
-            }
-            logger.info("DatabaseClient: PRODUCTION mode (Supabase Postgres)")
+            # ── Supabase PgBouncer fix ──────────────────────────────────────────
+            # Supabase's connection pooler runs PgBouncer in TRANSACTION mode.
+            # Transaction mode does NOT support asyncpg prepared statements — any
+            # reused connection that still has server-side prepared statements will
+            # crash with DuplicatePreparedStatementError.
+            #
+            # Solution: NullPool disables SQLAlchemy's own client-side connection
+            # pool entirely. Every request opens a fresh connection (which has zero
+            # prepared statements) and closes it when done. PgBouncer still does
+            # pooling at the infra level, so there is no performance penalty.
+            self.engine = create_async_engine(
+                db_url,
+                poolclass=NullPool,                        # ← key fix
+                connect_args={"statement_cache_size": 0},  # ← belt-and-suspenders
+                echo=False,
+                future=True,
+            )
+            logger.info("DatabaseClient: PRODUCTION mode (Supabase Postgres + NullPool)")
         else:
             db_url = "sqlite+aiosqlite:///./astramind.db"
-            connect_args = {"check_same_thread": False}
+            self.engine = create_async_engine(
+                db_url,
+                connect_args={"check_same_thread": False},
+                echo=False,
+                future=True,
+                pool_pre_ping=True,
+                pool_recycle=300,
+            )
             logger.info("DatabaseClient: DEVELOPMENT mode (SQLite)")
-
-        self.engine = create_async_engine(
-            db_url,
-            connect_args=connect_args,
-            echo=False,
-            future=True,
-            # Pool settings tuned for Supabase pooler (PgBouncer transaction mode)
-            pool_pre_ping=True,     # discard stale connections automatically
-            pool_recycle=300,       # recycle connections every 5 min
-        )
 
         # Enable WAL mode for SQLite to support concurrent reads
         if self._env != "production":
