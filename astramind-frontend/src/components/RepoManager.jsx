@@ -42,8 +42,10 @@ export default function RepoManager({ isOpen, onClose }) {
 
   useEffect(() => {
     if (isOpen && tab === 'list') fetchRepos();
-    if (isOpen && tab === 'github' && githubToken && !githubUser) loadGhRepos();
-  }, [isOpen, tab, githubToken, githubUser]);
+    if (isOpen && tab === 'github' && githubToken) {
+      if (ghRepos.length === 0) loadGhRepos();
+    }
+  }, [isOpen, tab, githubToken, ghRepos.length]);
 
   /* ── Indexed repo list (filtered by logged-in GitHub user) ─────── */
   const fetchRepos = async () => {
