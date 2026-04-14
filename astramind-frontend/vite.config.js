@@ -9,12 +9,14 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
-        // Split vendor chunks for better caching
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          ui: ['framer-motion', 'lucide-react', 'sonner'],
-          markdown: ['react-markdown', 'react-syntax-highlighter', 'remark-gfm', 'rehype-raw'],
-          charts: ['recharts'],
+        // Split vendor chunks for better caching (Function required for Vite 8 / Rolldown)
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) return 'vendor';
+            if (id.includes('framer-motion') || id.includes('lucide-react') || id.includes('sonner')) return 'ui';
+            if (id.includes('react-markdown') || id.includes('react-syntax-highlighter') || id.includes('remark') || id.includes('rehype')) return 'markdown';
+            if (id.includes('recharts')) return 'charts';
+          }
         },
       },
     },
