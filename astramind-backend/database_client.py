@@ -161,7 +161,14 @@ class DatabaseClient:
 
         if self._env == "production":
             db_url = settings.DATABASE_URL
-            connect_args: Dict[str, Any] = {}
+            # CRITICAL: Supabase uses PgBouncer in "transaction" mode which does NOT
+            # support asyncpg prepared statements. Setting prepared_statement_cache_size=0
+            # disables the prepared statement cache entirely, fixing the
+            # DuplicatePreparedStatementError on every query.
+            connect_args: Dict[str, Any] = {
+                "prepared_statement_cache_size": 0,
+                "statement_cache_size": 0,
+            }
             logger.info("DatabaseClient: PRODUCTION mode (Supabase Postgres)")
         else:
             db_url = "sqlite+aiosqlite:///./astramind.db"
@@ -173,6 +180,9 @@ class DatabaseClient:
             connect_args=connect_args,
             echo=False,
             future=True,
+            # Pool settings tuned for Supabase pooler (PgBouncer transaction mode)
+            pool_pre_ping=True,     # discard stale connections automatically
+            pool_recycle=300,       # recycle connections every 5 min
         )
 
         # Enable WAL mode for SQLite to support concurrent reads
