@@ -1,0 +1,166 @@
+.onboarding-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.onboarding-modal {
+  width: 100%;
+  max-width: 540px;
+  background: linear-gradient(145deg, rgba(30, 32, 45, 0.9) 0%, rgba(20, 22, 35, 0.95) 100%);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  padding: 2.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.onboarding-skip {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  color: var(--text-tertiary);
+  font-size: 0.85rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.onboarding-skip:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+}
+
+.onboarding-content {
+  min-height: 280px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.onboarding-slide {
+  text-align: center;
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.onboarding-icon-wrapper {
+  margin-bottom: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.onboarding-title {
+  margin: 0 0 1rem;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.onboarding-desc {
+  margin: 0;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  max-width: 420px;
+}
+
+.onboarding-footer {
+  margin-top: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 10;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.onboarding-dots {
+  display: flex;
+  gap: 8px;
+}
+
+.onboarding-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.onboarding-dot.active {
+  background: var(--accent-color);
+  width: 24px;
+}
+
+.onboarding-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.onboarding-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border-radius: 12px;
+  padding: 0.7rem 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.onboarding-btn.secondary {
+  background: transparent;
+  color: var(--text-secondary);
+}
+.onboarding-btn.secondary:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.onboarding-btn.primary {
+  background: var(--accent-color);
+  color: var(--sidebar-bg);
+}
+.onboarding-btn.primary:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+.onboarding-btn.primary.finish {
+  background: #34D399; /* Green for finish */
+  color: var(--sidebar-bg);
+}
+.onboarding-btn.primary.finish:hover {
+  background: #10B981;
+}

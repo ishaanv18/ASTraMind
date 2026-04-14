@@ -1,0 +1,238 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(5px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  width: 95%;
+  max-width: 720px;
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.modal-body {
+  padding: 1.5rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--bg-glass-border);
+}
+
+.modal-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.close-btn {
+  color: var(--text-secondary);
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.close-btn:hover {
+  background: var(--bg-glass-hover);
+  color: var(--text-primary);
+}
+
+.modal-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--bg-glass-border);
+}
+
+.tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+
+.tab-btn:hover {
+  color: var(--text-primary);
+}
+
+.tab-btn.active {
+  color: var(--accent-color);
+  border-bottom: 2px solid var(--accent-color);
+}
+
+.modal-body {
+  padding: 1.5rem;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.loading, .empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.repo-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+}
+
+.repo-card.selected {
+  border: 1px solid var(--accent-color);
+  background: rgba(10, 132, 255, 0.05);
+}
+
+.repo-card-info h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.25rem;
+}
+
+.repo-card-info p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.repo-stats {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+}
+
+.delete-btn {
+  color: var(--error);
+  font-size: 0.85rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--border-radius-sm);
+}
+
+.delete-btn:hover {
+  background: rgba(255, 69, 58, 0.1);
+}
+
+.new-repo-form form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-row {
+  display: flex;
+  align-items: flex-end;
+}
+
+.w-50 {
+  flex: 1;
+}
+
+label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+input {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--bg-glass-border);
+  padding: 0.8rem 1rem;
+  border-radius: var(--border-radius-sm);
+  color: var(--text-primary);
+  outline: none;
+}
+
+input:focus {
+  border-color: var(--accent-color);
+}
+
+.submit-btn {
+  background: var(--accent-color);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  font-weight: 600;
+  border-radius: var(--border-radius-md);
+}
+
+.submit-btn:hover {
+  background: var(--accent-hover);
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+.big-icon {
+  width: 48px;
+  height: 48px;
+  color: var(--accent-color);
+  margin-bottom: 1rem;
+}
+
+.indexing-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2rem;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+  margin: 1.5rem 0;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: var(--accent-color);
+  transition: width 0.3s ease;
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}

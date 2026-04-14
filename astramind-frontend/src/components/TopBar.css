@@ -1,0 +1,130 @@
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  height: 56px;
+  min-height: 56px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(14, 16, 24, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  flex-shrink: 0;
+}
+
+/* Breadcrumb */
+.topbar-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+}
+
+.breadcrumb-home {
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0.2rem;
+  border-radius: 4px;
+  transition: color 0.2s;
+}
+.breadcrumb-home:hover { color: var(--accent-color); }
+
+.breadcrumb-sep { color: var(--text-tertiary); opacity: 0.4; }
+
+.breadcrumb-page {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.breadcrumb-repo {
+  color: var(--accent-color);
+  font-weight: 600;
+  font-size: 0.82rem;
+  background: rgba(0, 229, 255, 0.08);
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+}
+
+/* Right side profile */
+.topbar-right { display: flex; align-items: center; gap: 1rem; }
+
+.topbar-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.4rem 0.8rem 0.4rem 0.5rem;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  box-shadow: none !important;
+}
+
+.topbar-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent-color);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.topbar-user-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.topbar-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.topbar-handle {
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+}
+
+.topbar-divider {
+  width: 1px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0 0.2rem;
+}
+
+.topbar-logout {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: transparent;
+  border: none;
+  color: #ff5f57;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.3rem 0.4rem;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+.topbar-logout:hover { background: rgba(255, 95, 87, 0.12); }
+
+.topbar-no-user {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  color: var(--text-tertiary);
+  background: rgba(255,255,255,0.03) !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  box-shadow: none !important;
+}

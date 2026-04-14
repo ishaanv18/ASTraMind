@@ -1,0 +1,48 @@
+.circular-ring-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 0 15px rgba(255,255,255,0.02);
+}
+
+.circular-ring-svg {
+  transform: rotate(-90deg);
+  overflow: visible;
+}
+
+.circular-ring-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.05);
+}
+
+.circular-ring-progress {
+  fill: none;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.1s ease-out, stroke 0.5s ease;
+  filter: drop-shadow(0 0 4px currentColor);
+}
+
+.circular-ring-content {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+}
+
+.cr-score {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  text-shadow: 0 0 10px currentColor;
+}
+
+.cr-max {
+  font-size: 0.8rem;
+  font-weight: 600;
+  opacity: 0.7;
+}

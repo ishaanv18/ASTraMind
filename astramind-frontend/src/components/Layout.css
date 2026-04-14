@@ -1,0 +1,33 @@
+.layout-overlay {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--window-bg);
+  backdrop-filter: blur(60px);
+  -webkit-backdrop-filter: blur(60px);
+}
+
+.sidebar {
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--window-border);
+}
+
+.main-content {
+  flex: 1;
+  height: 100%;
+  position: relative;
+  background-color: var(--content-bg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.main-content-scrollable {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  height: 100%;
+  width: 100%;
+}

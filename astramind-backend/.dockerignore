@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+*.db
+*.db-shm
+*.db-wal
+chromadb_data/
+repos/
+.env
+.env.*
+!.env.example
+*.log
+.git/

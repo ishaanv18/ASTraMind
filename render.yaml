@@ -1,0 +1,48 @@
+# render.yaml — Render Blueprint for ASTraMind Backend
+# This file tells Render exactly how to build and deploy the backend service.
+# Connect your GitHub repo to Render and it will read this automatically.
+
+services:
+  - type: web
+    name: astramind-backend
+    runtime: docker
+    dockerfilePath: ./astramind-backend/Dockerfile
+    dockerContext: ./astramind-backend
+    plan: starter          # Change to "standard" for persistent disk support
+    healthCheckPath: /health
+
+    # ── Persistent Disk ─────────────────────────────────────────────────────
+    # This mounts a persistent volume at /data so ChromaDB and SQLite survive redeploys.
+    # NOTE: Requires "Starter" plan or higher ($7/mo). Free plan has no disk.
+    disk:
+      name: astramind-data
+      mountPath: /data
+      sizeGB: 5
+
+    # ── Environment Variables ─────────────────────────────────────────────────
+    # Set these in the Render Dashboard under Environment for security.
+    # DO NOT hardcode secrets here.
+    envVars:
+      - key: AI_ENV
+        value: production
+      - key: DB_ENV
+        value: development        # SQLite on /data volume
+      - key: DATABASE_URL
+        value: sqlite+aiosqlite:////data/astramind.db
+      - key: CHROMADB_PATH
+        value: /data/chromadb_data
+      - key: REPOS_STORAGE_PATH
+        value: /data/repos
+      - key: ALLOWED_ORIGINS
+        value: https://astramind.vercel.app
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
+      - key: MAX_FILE_SIZE_KB
+        value: "500"
+      - key: ANONYMIZED_TELEMETRY
+        value: "false"
+      - key: CHROMA_TELEMETRY
+        value: "false"
+      # Set these as SECRET in the Render dashboard (not here):
+      # GROQ_API_KEY
+      # BREVO_API_KEY

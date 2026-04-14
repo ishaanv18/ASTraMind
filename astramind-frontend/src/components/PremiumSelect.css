@@ -1,0 +1,98 @@
+.premium-select-container {
+  position: relative;
+  width: 100%;
+  user-select: none;
+  font-family: inherit;
+}
+
+.premium-select-container.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.premium-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 1.2rem;
+  background: var(--sidebar-bg);
+  border: 1px solid var(--bg-glass-border);
+  border-radius: var(--border-radius-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 44px;
+}
+
+.premium-select-container:not(.disabled) .premium-select-trigger:hover,
+.premium-select-trigger.open {
+  border-color: var(--accent-color);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.premium-select-value {
+  font-size: 0.95rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.premium-select-icon {
+  color: var(--text-tertiary);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+}
+
+.premium-select-icon.rotate {
+  transform: rotate(180deg);
+  color: var(--accent-color);
+}
+
+.premium-select-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: #141624; /* Solid fallback but with glass layer */
+  border-radius: var(--border-radius-sm);
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 10px 40px -10px rgba(0,0,0,0.8);
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  /* Glass effects inherited from .glass-panel */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.premium-select-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.7rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 400;
+  transition: all 0.15s ease;
+}
+
+.premium-select-option:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+.premium-select-option.selected {
+  background: rgba(0, 229, 255, 0.1);
+  color: var(--accent-color);
+  font-weight: 500;
+}
+
+.premium-select-check {
+  color: var(--accent-color);
+}

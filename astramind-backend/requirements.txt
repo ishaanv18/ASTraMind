@@ -1,0 +1,60 @@
+# ==============================================================================
+# Astramind Backend — requirements.txt
+# Pinned for reproducible builds. All packages are free and open source.
+# Install: pip install -r requirements.txt
+# ==============================================================================
+
+# ── Web Framework ──────────────────────────────────────────────────────────────
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+python-multipart==0.0.18
+
+# ── Async HTTP Client (relaxed for supabase/groq/qdrant compatibility) ─────────
+httpx>=0.26.0,<0.28
+
+# ── AI Providers ──────────────────────────────────────────────────────────────
+groq==0.13.1
+
+# ── Embeddings ────────────────────────────────────────────────────────────────
+sentence-transformers==3.3.1
+torch==2.5.1
+
+# ── Vector Stores ─────────────────────────────────────────────────────────────
+chromadb==0.6.3
+qdrant-client==1.12.1
+
+# ── Tree-sitter AST Parsing ────────────────────────────────────────────────────
+tree-sitter==0.23.2
+tree-sitter-python==0.23.6
+tree-sitter-javascript==0.23.1
+tree-sitter-java==0.23.5
+tree-sitter-go==0.23.4
+tree-sitter-rust==0.23.2
+
+# ── Git Integration ───────────────────────────────────────────────────────────
+gitpython==3.1.43
+
+# ── Database ──────────────────────────────────────────────────────────────────
+sqlalchemy==2.0.36
+aiosqlite==0.20.0
+asyncpg==0.30.0
+
+# ── Supabase (optional — production only, relaxed pin for httpx compat) ────────
+supabase>=2.5.0,<2.11
+
+# ── Cache / Queue ─────────────────────────────────────────────────────────────
+redis[asyncio]==5.2.1
+
+# ── Configuration ─────────────────────────────────────────────────────────────
+pydantic-settings==2.7.0
+pydantic==2.10.3
+python-dotenv==1.0.1
+
+# ── HTTP Requests (sync — used by dep checker) ────────────────────────────────
+requests==2.32.3
+
+# ── Utilities ─────────────────────────────────────────────────────────────────
+anyio==4.7.0
+
+# ── Rate Limiting ─────────────────────────────────────────────────────────────
+slowapi==0.1.9
