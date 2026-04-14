@@ -9,6 +9,7 @@ DELETE /api/v1/index/repository/{repo_id} — remove repo + vectors
 from __future__ import annotations
 
 import asyncio
+import gc
 import logging
 import os
 import shutil
@@ -188,7 +189,7 @@ async def _run_indexing(repo_id: str, repo_path: str, repo_name: str, github_use
         await cache.set_progress(repo_id, progress)
 
         if all_chunks:
-            BATCH_SIZE = 100
+            BATCH_SIZE = 20  # low enough to stay under Render's 512MB free-tier RAM
             total_chunks = len(all_chunks)
             loop = asyncio.get_event_loop()
 
@@ -203,10 +204,14 @@ async def _run_indexing(repo_id: str, repo_path: str, repo_name: str, github_use
                 for chunk, emb in zip(batch, embeddings):
                     chunk["embedding"] = emb
 
-                # 2. Upsert batch (Network I/O)
+                # 2. Upsert batch to Qdrant (Network I/O)
                 await loop.run_in_executor(
                     None, vector.upsert_chunks, repo_id, batch
                 )
+
+                # 3. Free embedding arrays immediately — prevents cumulative OOM
+                del embeddings, texts
+                gc.collect()
 
                 done_percent = 55.0 + (((i + len(batch)) / total_chunks) * 35.0)
                 progress["percent"] = round(done_percent, 1)
