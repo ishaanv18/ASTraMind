@@ -432,6 +432,12 @@ async def delete_repository(repo_id: str):
     except Exception:
         pass
 
+    # 4. Delete from PostgreSQL
+    try:
+        await db.delete_repository(repo_id)
+    except Exception as exc:
+        errors.append(f"Database deletion failed: {exc}")
+
     logger.info("[INDEX] Repository %s deleted. Errors: %s", repo_id, errors)
     return {
         "repo_id": repo_id,

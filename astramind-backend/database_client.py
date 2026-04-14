@@ -279,6 +279,16 @@ class DatabaseClient:
             )
             repo = result.scalars().first()
             return self._row_to_dict(repo) if repo else None
+    async def delete_repository(self, repo_id: str) -> None:
+        """Delete a repository and all its cascaded records (files, etc.)."""
+        async with self.AsyncSessionLocal() as session:
+            stmt = await session.execute(
+                select(Repository).where(Repository.id == repo_id)
+            )
+            repo = stmt.scalars().first()
+            if repo:
+                await session.delete(repo)
+                await session.commit()
 
     async def list_repositories(self, github_user: Optional[str] = None) -> List[Dict[str, Any]]:
         async with self.AsyncSessionLocal() as session:
