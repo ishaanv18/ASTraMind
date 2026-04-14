@@ -106,10 +106,25 @@ async def _run_indexing(repo_id: str, repo_path: str, repo_name: str, github_use
         # Ensure vector collection exists
         vector.create_collection(repo_id)
 
-        # ── Step 2-4: process files ───────────────────────────────────────────
+        # ── Step 2-5: 4-phase batch pipeline ─────────────────────────────────
+        #
+        # OLD approach: for each file → embed → upsert → db_save  (N round trips)
+        # NEW approach:
+        #   Phase A — Parse all files (CPU, no network) → collect all chunks
+        #   Phase B — Embed ALL chunks in one big ONNX batch
+        #   Phase C — Upsert ALL chunks to Qdrant in ONE network call
+        #   Phase D — Bulk insert ALL file metadata to Supabase in ONE DB call
+        #
+        # For 131 files: ~262 network calls → 2 network calls.  ~5-10× faster.
+
+        all_chunks:    List[Dict]  = []   # every chunk from every file
+        file_metadata: List[Dict]  = []   # one row per successfully parsed file
         language_counts: Dict[str, int] = {}
         total_functions = 0
-        EMBED_BATCH = 32  # embed N chunks at a time
+
+        # ── Phase A: Parse ────────────────────────────────────────────────────
+        progress["message"] = "Parsing files..."
+        await cache.set_progress(repo_id, progress)
 
         for file_index, (abs_path, rel_path, language) in enumerate(file_list):
             try:
@@ -117,22 +132,15 @@ async def _run_indexing(repo_id: str, repo_path: str, repo_name: str, github_use
                 if not content or not content.strip():
                     continue
 
-                # Parse functions (for metadata + function_count)
-                functions = CodeParser.parse_functions(content, language, rel_path)
+                functions      = CodeParser.parse_functions(content, language, rel_path)
                 function_count = len(functions)
                 total_functions += function_count
 
-                # Chunk file
-                chunks = CodeParser.chunk_text(
-                    content, rel_path, language, repo_id
-                )
+                chunks = CodeParser.chunk_text(content, rel_path, language, repo_id)
 
-                # Tag chunks with function name if function boundary is known
-                func_by_line: Dict[int, str] = {
-                    f.start_line: f.name for f in functions
-                }
+                # Tag each chunk with the nearest enclosing function name
+                func_by_line: Dict[int, str] = {f.start_line: f.name for f in functions}
                 for chunk in chunks:
-                    # Find closest function start above chunk start
                     nearest = ""
                     for fl in sorted(func_by_line, reverse=True):
                         if fl <= chunk["start_line"]:
@@ -140,24 +148,9 @@ async def _run_indexing(repo_id: str, repo_path: str, repo_name: str, github_use
                             break
                     chunk["function_name"] = nearest
 
-                # Embed in sub-batches
-                for batch_start in range(0, len(chunks), EMBED_BATCH):
-                    batch = chunks[batch_start : batch_start + EMBED_BATCH]
-                    texts = [c["content"] for c in batch]
-                    # Run blocking embedding in thread pool (it's CPU-bound)
-                    loop = asyncio.get_event_loop()
-                    embeddings = await loop.run_in_executor(
-                        None, embedder.embed_batch, texts
-                    )
-                    for chunk, emb in zip(batch, embeddings):
-                        chunk["embedding"] = emb
+                all_chunks.extend(chunks)
+                language_counts[language] = language_counts.get(language, 0) + 1
 
-                # Upsert to vector store (blocking I/O — wrap in executor)
-                await asyncio.get_event_loop().run_in_executor(
-                    None, vector.upsert_chunks, repo_id, chunks
-                )
-
-                # Save file metadata
                 last_modified: Optional[datetime] = None
                 try:
                     mtime = os.path.getmtime(abs_path)
@@ -165,53 +158,81 @@ async def _run_indexing(repo_id: str, repo_path: str, repo_name: str, github_use
                 except OSError:
                     pass
 
-                await db.save_indexed_file({
-                    "repo_id": repo_id,
-                    "file_path": rel_path,
-                    "language": language,
+                file_metadata.append({
+                    "repo_id":        repo_id,
+                    "file_path":      rel_path,
+                    "language":       language,
                     "function_count": function_count,
-                    "chunk_count": len(chunks),
-                    "last_modified": last_modified,
+                    "chunk_count":    len(chunks),
+                    "last_modified":  last_modified,
                 })
 
-                language_counts[language] = language_counts.get(language, 0) + 1
-
             except Exception as file_exc:
-                logger.warning(
-                    "[INDEX] Error indexing file %s: %s", rel_path, file_exc
-                )
-                # Continue with next file — don't abort entire job
+                logger.warning("[INDEX] Error parsing file %s: %s", rel_path, file_exc)
 
             finally:
                 done = file_index + 1
+                # Progress covers 0-50% during parse phase
                 progress["files_done"] = done
-                progress["percent"] = round(done / total_files * 100, 1)
-                progress["message"] = f"Indexed {done}/{total_files}: {rel_path}"
+                progress["percent"]    = round(done / total_files * 50, 1)
+                progress["message"]    = f"Parsing {done}/{total_files}: {rel_path}"
                 await cache.set_progress(repo_id, progress)
+
+        # ── Phase B: Embed ALL chunks in one big batch ────────────────────────
+        progress["percent"] = 55.0
+        progress["message"] = f"Embedding {len(all_chunks)} chunks..."
+        await cache.set_progress(repo_id, progress)
+
+        if all_chunks:
+            loop = asyncio.get_event_loop()
+            texts = [c["content"] for c in all_chunks]
+            # embed_batch handles arbitrary sizes; ONNX is efficient at large batches
+            all_embeddings = await loop.run_in_executor(
+                None, embedder.embed_batch, texts
+            )
+            for chunk, emb in zip(all_chunks, all_embeddings):
+                chunk["embedding"] = emb
+
+        # ── Phase C: Upsert ALL chunks to Qdrant (ONE network call) ──────────
+        progress["percent"] = 75.0
+        progress["message"] = f"Uploading {len(all_chunks)} vectors to Qdrant..."
+        await cache.set_progress(repo_id, progress)
+
+        if all_chunks:
+            await asyncio.get_event_loop().run_in_executor(
+                None, vector.upsert_chunks, repo_id, all_chunks
+            )
+
+        # ── Phase D: Bulk insert file metadata (ONE DB connection) ────────────
+        progress["percent"] = 90.0
+        progress["message"] = f"Saving metadata for {len(file_metadata)} files..."
+        await cache.set_progress(repo_id, progress)
+
+        await db.save_indexed_files_bulk(file_metadata)
 
         # ── Step 5: finalise repo record ──────────────────────────────────────
         await db.save_repository({
-            "id": repo_id,
-            "name": repo_name,
-            "repo_path": repo_path,
-            "github_user": github_user,
+            "id":               repo_id,
+            "name":             repo_name,
+            "repo_path":        repo_path,
+            "github_user":      github_user,
             "language_summary": language_counts,
-            "total_files": total_files,
-            "total_functions": total_functions,
+            "total_files":      total_files,
+            "total_functions":  total_functions,
         })
 
-        progress["status"] = "completed"
+        progress["status"]  = "completed"
         progress["percent"] = 100.0
         progress["message"] = (
-            f"Indexing complete. {total_files} files, {total_functions} functions."
+            f"Done! {total_files} files, {total_functions} functions, "
+            f"{len(all_chunks)} vectors indexed."
         )
         await cache.set_progress(repo_id, progress)
         logger.info(
-            "[INDEX] Done repo_id=%s files=%d functions=%d",
-            repo_id,
-            total_files,
-            total_functions,
+            "[INDEX] Done repo_id=%s files=%d functions=%d chunks=%d",
+            repo_id, total_files, total_functions, len(all_chunks),
         )
+
 
     except Exception as exc:
         logger.error("[INDEX] Fatal error for repo_id=%s: %s", repo_id, exc, exc_info=True)

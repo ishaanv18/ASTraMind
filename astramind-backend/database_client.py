@@ -322,6 +322,42 @@ class DatabaseClient:
                 session.add(f)
             await session.commit()
 
+    async def save_indexed_files_bulk(self, files: List[Dict[str, Any]]) -> None:
+        """
+        Insert or update many IndexedFile rows in a SINGLE transaction.
+        Orders of magnitude faster than calling save_indexed_file() per file,
+        because we open only ONE database connection for the whole batch.
+        """
+        if not files:
+            return
+        now = _now()
+        async with self.AsyncSessionLocal() as session:
+            for file_data in files:
+                stmt = await session.execute(
+                    select(IndexedFile).where(
+                        IndexedFile.repo_id == file_data["repo_id"],
+                        IndexedFile.file_path == file_data["file_path"],
+                    )
+                )
+                existing = stmt.scalars().first()
+                if existing:
+                    existing.function_count = file_data.get("function_count", 0)
+                    existing.chunk_count    = file_data.get("chunk_count", 0)
+                    existing.language       = file_data.get("language", "")
+                    existing.indexed_at     = now
+                else:
+                    session.add(IndexedFile(
+                        id             = _uuid(),
+                        repo_id        = file_data["repo_id"],
+                        file_path      = file_data["file_path"],
+                        language       = file_data.get("language", ""),
+                        function_count = file_data.get("function_count", 0),
+                        chunk_count    = file_data.get("chunk_count", 0),
+                        last_modified  = file_data.get("last_modified"),
+                        indexed_at     = now,
+                    ))
+            await session.commit()
+
     async def get_indexed_files(self, repo_id: str) -> List[Dict[str, Any]]:
         async with self.AsyncSessionLocal() as session:
             result = await session.execute(
@@ -329,6 +365,7 @@ class DatabaseClient:
             )
             files = result.scalars().all()
             return [self._row_to_dict(f) for f in files]
+
 
     # ══════════════════════════════════════════════════════════════════════════
     # Conversation methods
