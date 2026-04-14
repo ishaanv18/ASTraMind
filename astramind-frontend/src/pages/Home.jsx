@@ -59,7 +59,7 @@ export default function Home() {
     setGhLoading(true);
     try {
       const { repos, user } = await fetchGhData(ghToken.trim());
-      
+
       // Fetch already indexed repos for this user from our backend
       let myIndexedRepos = [];
       try {
@@ -325,7 +325,7 @@ export default function Home() {
                               {repo.description && <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0.2rem 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{repo.description}</p>}
                               <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '0.2rem' }}>{repo.language} · {new Date(repo.updated_at).toLocaleDateString()}</div>
                             </div>
-                            
+
                             {(() => {
                               const alreadyIndexed = indexedRepos.find(ir => ir.name === repo.name);
                               if (alreadyIndexed) {
@@ -506,24 +506,24 @@ export default function Home() {
             <form className="contact-form" onSubmit={handleContactSubmit}>
               <div className="form-group">
                 <label>Name</label>
-                <input type="text" placeholder="John Doe" required 
-                  value={contactForm.name} onChange={e => setContactForm({...contactForm, name: e.target.value})} />
+                <input type="text" placeholder="Ishaan Verma" required
+                  value={contactForm.name} onChange={e => setContactForm({ ...contactForm, name: e.target.value })} />
               </div>
               <div className="form-group">
                 <label>Email</label>
-                <input type="email" placeholder="john@company.com" required 
-                  value={contactForm.email} onChange={e => setContactForm({...contactForm, email: e.target.value})} />
+                <input type="email" placeholder="ishaan.verma36@gmail.com" required
+                  value={contactForm.email} onChange={e => setContactForm({ ...contactForm, email: e.target.value })} />
               </div>
               <div className="form-group">
                 <label>Message</label>
                 <textarea rows="4" placeholder="How can we help you?" required
-                  value={contactForm.message} onChange={e => setContactForm({...contactForm, message: e.target.value})}></textarea>
+                  value={contactForm.message} onChange={e => setContactForm({ ...contactForm, message: e.target.value })}></textarea>
               </div>
               <button type="submit" className="cta-primary" disabled={contactStatus === 'sending'}>
                 {contactStatus === 'sending' ? <RefreshCw size={16} className="spin-icon" /> : 'Send Message'}
               </button>
-              {contactStatus === 'success' && <p className="status-msg success"><CheckCircle2 size={14}/> Message sent successfully!</p>}
-              {contactStatus === 'error' && <p className="status-msg error"><X size={14}/> Failed to send message. Please try again.</p>}
+              {contactStatus === 'success' && <p className="status-msg success"><CheckCircle2 size={14} /> Message sent successfully!</p>}
+              {contactStatus === 'error' && <p className="status-msg error"><X size={14} /> Failed to send message. Please try again.</p>}
             </form>
           </div>
         </div>
