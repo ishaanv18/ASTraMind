@@ -1,11 +1,13 @@
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { MeshDistortMaterial, Environment, Float, Preload } from '@react-three/drei';
+import * as THREE from 'three';
 
 const Core = () => {
   const meshRef = useRef();
 
   useFrame((state, delta) => {
+    // Subtle rotation to make it feel alive
     if (meshRef.current) {
       meshRef.current.rotation.y += delta * 0.1;
       meshRef.current.rotation.x += delta * 0.05;
@@ -17,14 +19,14 @@ const Core = () => {
       <mesh ref={meshRef} castShadow receiveShadow>
         <sphereGeometry args={[1.5, 128, 128]} />
         <MeshDistortMaterial
-          color="#0a1628"
+          color="#000000"
           emissive="#00b4d8"
-          emissiveIntensity={0.8}
-          envMapIntensity={1.5}
+          emissiveIntensity={0.2}
+          envMapIntensity={2.5}
           clearcoat={1}
           clearcoatRoughness={0.1}
-          metalness={0.6}
-          roughness={0.1}
+          metalness={1}
+          roughness={0}
           distort={0.4}
           speed={2}
         />
@@ -52,19 +54,19 @@ const OrbitingMonoliths = () => {
 
         return (
           <Float key={i} speed={1.5} rotationIntensity={2} floatIntensity={0.5}>
-            <mesh position={[x, y, 0]} rotation={[i * 0.5, i * 0.3, 0]}>
+            <mesh position={[x, y, 0]} rotation={[Math.random(), Math.random(), 0]}>
               <boxGeometry args={[0.5, 0.5, 0.5]} />
               <meshPhysicalMaterial
-                color="#b054ff"
+                color="#b054ff" // Purple glow
                 transmission={0.9}
+                opacity={1}
                 metalness={0.8}
                 roughness={0}
                 ior={1.5}
                 thickness={0.5}
                 emissive="#b054ff"
-                emissiveIntensity={0.8}
+                emissiveIntensity={0.5}
                 transparent
-                opacity={1}
               />
             </mesh>
           </Float>
@@ -77,11 +79,13 @@ const OrbitingMonoliths = () => {
 export default function DataCore() {
   return (
     <>
-      <ambientLight intensity={1.0} />
-      <directionalLight position={[10, 10, 5]} intensity={2} />
-      <pointLight position={[-5, -5, -5]} intensity={1.5} color="#0A84FF" />
-      <pointLight position={[5, 5, 5]} intensity={1.5} color="#b054ff" />
-      <Environment preset="studio" background={false} />
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[10, 10, 5]} intensity={1} />
+      <pointLight position={[-10, -10, -10]} intensity={0.5} color="#0A84FF" />
+
+      {/* We use an abstract glowing environment */}
+      <Environment preset="studio" />
+
       <Core />
       <OrbitingMonoliths />
       <Preload all />
