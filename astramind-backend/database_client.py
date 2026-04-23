@@ -163,15 +163,16 @@ class DatabaseClient:
         if self._env == "production":
             db_url = settings.DATABASE_URL
             # ── Neon PostgreSQL — direct connection, no PgBouncer ────────────────
-            # Neon supports full asyncpg feature set including prepared statements.
-            # A small QueuePool keeps 2 warm connections to avoid per-request
-            # TCP handshake overhead, while staying within Neon free tier limits.
+            # Neon requires SSL. asyncpg does NOT accept ?sslmode=require in the URL
+            # (that's a psycopg2 convention). Pass ssl=True via connect_args instead.
+            # Remove ?sslmode=require from DATABASE_URL in Render env vars.
             self.engine = create_async_engine(
                 db_url,
-                pool_size=2,        # 2 persistent warm connections
-                max_overflow=3,     # up to 5 total under load
-                pool_pre_ping=True, # drop stale connections automatically
-                pool_recycle=300,   # recycle every 5 min to avoid server-side timeouts
+                pool_size=2,
+                max_overflow=3,
+                pool_pre_ping=True,
+                pool_recycle=300,
+                connect_args={"ssl": True},   # ← asyncpg SSL flag for Neon
                 echo=False,
                 future=True,
             )
