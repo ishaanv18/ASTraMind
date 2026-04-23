@@ -162,24 +162,20 @@ class DatabaseClient:
 
         if self._env == "production":
             db_url = settings.DATABASE_URL
-            # ── Supabase PgBouncer fix ──────────────────────────────────────────
-            # Supabase's connection pooler runs PgBouncer in TRANSACTION mode.
-            # Transaction mode does NOT support asyncpg prepared statements — any
-            # reused connection that still has server-side prepared statements will
-            # crash with DuplicatePreparedStatementError.
-            #
-            # Solution: NullPool disables SQLAlchemy's own client-side connection
-            # pool entirely. Every request opens a fresh connection (which has zero
-            # prepared statements) and closes it when done. PgBouncer still does
-            # pooling at the infra level, so there is no performance penalty.
+            # ── Neon PostgreSQL — direct connection, no PgBouncer ────────────────
+            # Neon supports full asyncpg feature set including prepared statements.
+            # A small QueuePool keeps 2 warm connections to avoid per-request
+            # TCP handshake overhead, while staying within Neon free tier limits.
             self.engine = create_async_engine(
                 db_url,
-                poolclass=NullPool,                        # ← key fix
-                connect_args={"statement_cache_size": 0},  # ← belt-and-suspenders
+                pool_size=2,        # 2 persistent warm connections
+                max_overflow=3,     # up to 5 total under load
+                pool_pre_ping=True, # drop stale connections automatically
+                pool_recycle=300,   # recycle every 5 min to avoid server-side timeouts
                 echo=False,
                 future=True,
             )
-            logger.info("DatabaseClient: PRODUCTION mode (Supabase Postgres + NullPool)")
+            logger.info("DatabaseClient: PRODUCTION mode (Neon Postgres)")
         else:
             db_url = "sqlite+aiosqlite:///./astramind.db"
             self.engine = create_async_engine(
